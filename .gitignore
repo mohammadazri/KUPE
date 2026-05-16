@@ -1,0 +1,69 @@
+# --- Secrets (NEVER commit) ---
+*.env
+.env
+.env.local
+.env.*.local
+!.env.example
+sa-key.json
+*-service-account.json
+firebase-admin-*.json
+*credentials*.json
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/.venv/
+backend/venv/
+backend/env/
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# --- Node / Vite ---
+node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+frontend/coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- PWA build artifacts ---
+frontend/dev-dist/
+frontend/public/sw.js
+frontend/public/workbox-*.js
+frontend/public/registerSW.js
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- OS / build ---
+*.tmp
+*.bak
+*.cache/
+
+# --- Cloud Run / Build artifacts ---
+.gcloudignore
+backend/.gcloudignore
+
+# --- Local cache files ---
+backend/.gemini_cache/
+backend/.places_cache/
+
+# --- Deleted dev artifact ---
+development_plan.pdf
+/.playwright-mcp

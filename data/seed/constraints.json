@@ -1,0 +1,65 @@
+{
+  "constraints": [
+    {
+      "key": "halal",
+      "label": "Halal",
+      "icon": "moon-star",
+      "description": "Only JAKIM-certified restaurants and venues",
+      "hard": true
+    },
+    {
+      "key": "wheelchair_accessible",
+      "label": "Wheelchair Accessible",
+      "icon": "accessibility",
+      "description": "Step-free entry, accessible toilets, lifts where applicable",
+      "hard": true
+    },
+    {
+      "key": "vegetarian",
+      "label": "Vegetarian",
+      "icon": "leaf",
+      "description": "Restaurants with verified vegetarian menus",
+      "hard": true
+    },
+    {
+      "key": "vegan",
+      "label": "Vegan",
+      "icon": "leaf",
+      "description": "Fully plant-based menu options",
+      "hard": true
+    },
+    {
+      "key": "gluten_free",
+      "label": "Gluten-Free",
+      "icon": "wheat-off",
+      "description": "Verified gluten-free preparation",
+      "hard": true
+    },
+    {
+      "key": "nut_free",
+      "label": "Nut-Free",
+      "icon": "shield",
+      "description": "Nut-free kitchen practices",
+      "hard": true
+    },
+    {
+      "key": "family_friendly",
+      "label": "Family Friendly",
+      "icon": "users",
+      "description": "Kid-friendly venues with appropriate amenities",
+      "hard": false
+    }
+  ],
+  "preferences": [
+    "outdoor",
+    "cultural",
+    "shopping",
+    "food",
+    "photography",
+    "nature",
+    "nightlife",
+    "wellness",
+    "history",
+    "skyline"
+  ]
+}

@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Public read-only collections (businesses + place_cache).
+    match /businesses/{doc} {
+      allow read: if true;
+      allow write: if false;  // writes only via backend SA
+    }
+    match /place_cache/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+    // Trips & linkages: only the trip owner can read; backend SA writes.
+    match /trips/{tripId} {
+      allow read: if request.auth != null && resource.data.traveler_id == request.auth.uid;
+      allow write: if false;
+    }
+    match /linkages/{linkageId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    // Audit log is internal — clients never read or write.
+    match /audit_log/{doc} {
+      allow read: if false;
+      allow write: if false;
+    }
+  }
+}

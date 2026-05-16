@@ -1,0 +1,632 @@
+[
+  {
+    "id": "biz_nasi_kandar_pelita",
+    "name": "Nasi Kandar Pelita (Jalan Ampang)",
+    "type": "restaurant",
+    "location": {"lat": 3.1601, "lng": 101.7167},
+    "tags": ["halal_jakim", "malay_cuisine", "indian_muslim", "budget", "24h"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "JAKIM"},
+      "accessibility": {"wheelchair": true, "notes": "Ground floor, ramp access"},
+      "vegetarian": false, "vegan": false, "gluten_free": false, "nut_free": false
+    },
+    "photos": [],
+    "address": "149, Jalan Ampang, KL",
+    "rating": 4.2, "avg_spend_myr": 20, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_village_park",
+    "name": "Village Park Restaurant (Damansara Uptown)",
+    "type": "restaurant",
+    "location": {"lat": 3.1330, "lng": 101.6230},
+    "tags": ["halal_jakim", "nasi_lemak", "malay_cuisine", "popular", "breakfast"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "JAKIM"},
+      "accessibility": {"wheelchair": true, "notes": "Step-free entry from car park"},
+      "vegetarian": false, "vegan": false, "gluten_free": false, "nut_free": false
+    },
+    "photos": [],
+    "address": "5, Jalan SS 21/37, Damansara Utama",
+    "rating": 4.6, "avg_spend_myr": 25, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_madam_kwan",
+    "name": "Madam Kwan's (KLCC)",
+    "type": "restaurant",
+    "location": {"lat": 3.1580, "lng": 101.7117},
+    "tags": ["halal_jakim", "nyonya", "malaysian", "mall", "family_friendly"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "JAKIM"},
+      "accessibility": {"wheelchair": true, "notes": "Mall accessibility, lifts available"},
+      "vegetarian": true, "vegan": false, "gluten_free": false, "nut_free": false
+    },
+    "photos": [],
+    "address": "Suria KLCC, Level 4",
+    "rating": 4.4, "avg_spend_myr": 50, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_restoran_yut_kee",
+    "name": "Restoran Yut Kee (Kanchut Road)",
+    "type": "restaurant",
+    "location": {"lat": 3.1648, "lng": 101.7000},
+    "tags": ["heritage", "hainanese", "kopitiam", "non_halal"],
+    "constraints_met": {
+      "halal": {"certified": false, "body": null},
+      "accessibility": {"wheelchair": true, "notes": "Ground floor"},
+      "vegetarian": false, "vegan": false, "gluten_free": false, "nut_free": false
+    },
+    "photos": [],
+    "address": "1, Jalan Kamunting, KL",
+    "rating": 4.3, "avg_spend_myr": 30, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_jaslyn_cakes",
+    "name": "Jaslyn Cakes (Bangsar)",
+    "type": "cafe",
+    "location": {"lat": 3.1294, "lng": 101.6727},
+    "tags": ["halal_friendly", "bakery", "cafe", "instagrammable"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "JAKIM"},
+      "accessibility": {"wheelchair": true, "notes": "Step-free"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": false
+    },
+    "photos": [],
+    "address": "8, Jalan Telawi 3, Bangsar Baru",
+    "rating": 4.5, "avg_spend_myr": 35, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_restoran_rebung",
+    "name": "Restoran Rebung Chef Ismail",
+    "type": "restaurant",
+    "location": {"lat": 3.1525, "lng": 101.6731},
+    "tags": ["halal_jakim", "malay_buffet", "traditional", "premium"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "JAKIM"},
+      "accessibility": {"wheelchair": true, "notes": "Lift access"},
+      "vegetarian": true, "vegan": false, "gluten_free": false, "nut_free": false
+    },
+    "photos": [],
+    "address": "5, Jalan Tanglin, KL",
+    "rating": 4.5, "avg_spend_myr": 100, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_atmosphere_360",
+    "name": "Atmosphere 360 (KL Tower)",
+    "type": "restaurant",
+    "location": {"lat": 3.1528, "lng": 101.7039},
+    "tags": ["halal_jakim", "revolving", "fine_dining", "skyline", "premium"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "JAKIM"},
+      "accessibility": {"wheelchair": true, "notes": "Lift to top, accessible toilets"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": false
+    },
+    "photos": [],
+    "address": "Menara KL Tower, Bukit Nanas",
+    "rating": 4.4, "avg_spend_myr": 220, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_kak_som",
+    "name": "Restoran Kak Som (Kampung Baru)",
+    "type": "restaurant",
+    "location": {"lat": 3.1670, "lng": 101.7050},
+    "tags": ["halal_jakim", "malay_cuisine", "nasi_campur", "budget"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "JAKIM"},
+      "accessibility": {"wheelchair": false, "notes": "Step at entrance"},
+      "vegetarian": false, "vegan": false, "gluten_free": false, "nut_free": false
+    },
+    "photos": [],
+    "address": "Jalan Raja Muda Musa, Kampung Baru",
+    "rating": 4.4, "avg_spend_myr": 18, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_kafe_attar",
+    "name": "Kafe Attar (Bukit Bintang)",
+    "type": "cafe",
+    "location": {"lat": 3.1465, "lng": 101.7106},
+    "tags": ["halal_friendly", "arabic_coffee", "specialty_coffee", "instagrammable"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "self_declared"},
+      "accessibility": {"wheelchair": true, "notes": "Step-free"},
+      "vegetarian": true, "vegan": true, "gluten_free": false, "nut_free": false
+    },
+    "photos": [],
+    "address": "Jalan Bukit Bintang, KL",
+    "rating": 4.4, "avg_spend_myr": 25, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_riwayat",
+    "name": "Riwayat Restaurant (Bukit Bintang)",
+    "type": "restaurant",
+    "location": {"lat": 3.1450, "lng": 101.7110},
+    "tags": ["halal_jakim", "middle_eastern", "arabic", "mid_premium"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "JAKIM"},
+      "accessibility": {"wheelchair": true, "notes": "Lift access"},
+      "vegetarian": true, "vegan": false, "gluten_free": false, "nut_free": false
+    },
+    "photos": [],
+    "address": "Bukit Bintang, KL",
+    "rating": 4.3, "avg_spend_myr": 80, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_dapur_jepun_kita",
+    "name": "Sushi King (Pavilion KL)",
+    "type": "restaurant",
+    "location": {"lat": 3.1488, "lng": 101.7138},
+    "tags": ["halal_jakim", "japanese", "mall", "family_friendly"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "JAKIM"},
+      "accessibility": {"wheelchair": true, "notes": "Mall accessibility"},
+      "vegetarian": true, "vegan": false, "gluten_free": true, "nut_free": false
+    },
+    "photos": [],
+    "address": "Pavilion KL, Bukit Bintang",
+    "rating": 4.1, "avg_spend_myr": 55, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_dolly_dim_sum",
+    "name": "Dolly Dim Sum (Pavilion)",
+    "type": "restaurant",
+    "location": {"lat": 3.1490, "lng": 101.7140},
+    "tags": ["halal_jakim", "dim_sum", "chinese", "mall"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "JAKIM"},
+      "accessibility": {"wheelchair": true, "notes": "Mall accessibility"},
+      "vegetarian": true, "vegan": false, "gluten_free": false, "nut_free": false
+    },
+    "photos": [],
+    "address": "Pavilion KL, Bukit Bintang",
+    "rating": 4.3, "avg_spend_myr": 65, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_alrayyan",
+    "name": "Al-Rayyan Restaurant (Kampung Baru)",
+    "type": "restaurant",
+    "location": {"lat": 3.1665, "lng": 101.7060},
+    "tags": ["halal_jakim", "yemeni", "middle_eastern", "mandi"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "JAKIM"},
+      "accessibility": {"wheelchair": true, "notes": "Step-free"},
+      "vegetarian": true, "vegan": false, "gluten_free": false, "nut_free": false
+    },
+    "photos": [],
+    "address": "Kampung Baru, KL",
+    "rating": 4.4, "avg_spend_myr": 45, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_klcc_park",
+    "name": "KLCC Park",
+    "type": "attraction",
+    "location": {"lat": 3.1576, "lng": 101.7127},
+    "tags": ["outdoor", "park", "skyline", "family_friendly", "free"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Wide paved paths, accessible toilets"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Kuala Lumpur City Centre",
+    "rating": 4.6, "avg_spend_myr": 0, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_petronas_twin_towers",
+    "name": "Petronas Twin Towers Skybridge",
+    "type": "attraction",
+    "location": {"lat": 3.1579, "lng": 101.7114},
+    "tags": ["landmark", "skyline", "iconic", "photography"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Lifts, accessible bridge"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Lower Ground, Tower 3",
+    "rating": 4.7, "avg_spend_myr": 80, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_kl_tower",
+    "name": "Menara KL (KL Tower)",
+    "type": "attraction",
+    "location": {"lat": 3.1528, "lng": 101.7039},
+    "tags": ["landmark", "skyline", "observation_deck", "photography"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Lift to deck"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Jalan Punchak, Bukit Nanas",
+    "rating": 4.5, "avg_spend_myr": 100, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_batu_caves",
+    "name": "Batu Caves",
+    "type": "attraction",
+    "location": {"lat": 3.2379, "lng": 101.6840},
+    "tags": ["temple", "cultural", "outdoor", "history"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": false, "notes": "272 steep steps to main shrine"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Gombak, Selangor",
+    "rating": 4.5, "avg_spend_myr": 0, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_islamic_arts_museum",
+    "name": "Islamic Arts Museum Malaysia",
+    "type": "attraction",
+    "location": {"lat": 3.1419, "lng": 101.6864},
+    "tags": ["museum", "cultural", "islamic", "history", "indoor"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Lifts, ramps, accessible toilets"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Jalan Lembah Perdana, KL",
+    "rating": 4.7, "avg_spend_myr": 25, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_national_mosque",
+    "name": "National Mosque of Malaysia (Masjid Negara)",
+    "type": "attraction",
+    "location": {"lat": 3.1416, "lng": 101.6917},
+    "tags": ["mosque", "cultural", "islamic", "architecture", "free"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Ramp access, dress robes provided"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Jalan Perdana, KL",
+    "rating": 4.7, "avg_spend_myr": 0, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_central_market",
+    "name": "Central Market (Pasar Seni)",
+    "type": "shopping",
+    "location": {"lat": 3.1454, "lng": 101.6962},
+    "tags": ["crafts", "cultural", "indoor", "heritage", "souvenirs"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Ramps, lift inside"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Jalan Hang Kasturi, KL",
+    "rating": 4.3, "avg_spend_myr": 60, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_lake_gardens",
+    "name": "Perdana Botanical Garden (Lake Gardens)",
+    "type": "attraction",
+    "location": {"lat": 3.1430, "lng": 101.6840},
+    "tags": ["park", "outdoor", "nature", "family_friendly", "free"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Paved loop, some hilly sections"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Jalan Kebun Bunga, KL",
+    "rating": 4.5, "avg_spend_myr": 0, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_aquaria_klcc",
+    "name": "Aquaria KLCC",
+    "type": "attraction",
+    "location": {"lat": 3.1539, "lng": 101.7117},
+    "tags": ["aquarium", "indoor", "family_friendly"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Step-free, lifts"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "KLCC Convention Centre",
+    "rating": 4.4, "avg_spend_myr": 75, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_kl_bird_park",
+    "name": "KL Bird Park",
+    "type": "attraction",
+    "location": {"lat": 3.1430, "lng": 101.6856},
+    "tags": ["wildlife", "outdoor", "family_friendly", "free_flight"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Paved paths, slopes"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "920, Jalan Cenderawasih, KL",
+    "rating": 4.5, "avg_spend_myr": 75, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_thean_hou_temple",
+    "name": "Thean Hou Temple",
+    "type": "attraction",
+    "location": {"lat": 3.1228, "lng": 101.6850},
+    "tags": ["temple", "cultural", "architecture", "photography", "free"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Lifts available, some steps"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "65 Persiaran Endah, Taman Persiaran Desa",
+    "rating": 4.5, "avg_spend_myr": 0, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_petaling_street",
+    "name": "Petaling Street (Chinatown)",
+    "type": "shopping",
+    "location": {"lat": 3.1437, "lng": 101.6982},
+    "tags": ["market", "shopping", "cultural", "outdoor", "street_food"],
+    "constraints_met": {
+      "halal": {"certified": false, "body": null},
+      "accessibility": {"wheelchair": true, "notes": "Paved street, can be crowded"},
+      "vegetarian": true, "vegan": true, "gluten_free": false, "nut_free": false
+    },
+    "photos": [],
+    "address": "Petaling Street, KL",
+    "rating": 4.2, "avg_spend_myr": 40, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_pavilion_kl",
+    "name": "Pavilion KL",
+    "type": "shopping",
+    "location": {"lat": 3.1488, "lng": 101.7138},
+    "tags": ["mall", "shopping", "premium", "family_friendly", "indoor"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Lifts, accessible toilets on every floor"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "168, Jalan Bukit Bintang, KL",
+    "rating": 4.5, "avg_spend_myr": 200, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_suria_klcc",
+    "name": "Suria KLCC",
+    "type": "shopping",
+    "location": {"lat": 3.1578, "lng": 101.7117},
+    "tags": ["mall", "shopping", "premium", "family_friendly", "indoor"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Full accessibility"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Kuala Lumpur City Centre",
+    "rating": 4.6, "avg_spend_myr": 200, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_mid_valley",
+    "name": "Mid Valley Megamall",
+    "type": "shopping",
+    "location": {"lat": 3.1180, "lng": 101.6770},
+    "tags": ["mall", "shopping", "family_friendly", "indoor"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Full accessibility"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Lingkaran Syed Putra, KL",
+    "rating": 4.5, "avg_spend_myr": 150, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_bukit_bintang",
+    "name": "Bukit Bintang Walk",
+    "type": "attraction",
+    "location": {"lat": 3.1466, "lng": 101.7105},
+    "tags": ["urban", "shopping", "nightlife", "food", "outdoor"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Wide paved walkways"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Bukit Bintang, KL",
+    "rating": 4.3, "avg_spend_myr": 0, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_jalan_alor",
+    "name": "Jalan Alor (Food Street)",
+    "type": "attraction",
+    "location": {"lat": 3.1469, "lng": 101.7088},
+    "tags": ["food_street", "outdoor", "nightlife", "non_halal_mix"],
+    "constraints_met": {
+      "halal": {"certified": false, "body": null},
+      "accessibility": {"wheelchair": true, "notes": "Flat street, crowded"},
+      "vegetarian": true, "vegan": true, "gluten_free": false, "nut_free": false
+    },
+    "photos": [],
+    "address": "Jalan Alor, Bukit Bintang, KL",
+    "rating": 4.4, "avg_spend_myr": 40, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_kampung_baru_walking_tour",
+    "name": "Kampung Baru Heritage Walk",
+    "type": "attraction",
+    "location": {"lat": 3.1670, "lng": 101.7045},
+    "tags": ["heritage", "cultural", "outdoor", "walking_tour", "free"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Mostly paved, some uneven sections"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Kampung Baru, KL",
+    "rating": 4.4, "avg_spend_myr": 0, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_merdeka_square",
+    "name": "Merdeka Square (Dataran Merdeka)",
+    "type": "attraction",
+    "location": {"lat": 3.1487, "lng": 101.6932},
+    "tags": ["heritage", "outdoor", "free", "photography", "landmark"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Flat paved square"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Jalan Raja, KL",
+    "rating": 4.5, "avg_spend_myr": 0, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_sultan_abdul_samad",
+    "name": "Sultan Abdul Samad Building",
+    "type": "attraction",
+    "location": {"lat": 3.1489, "lng": 101.6939},
+    "tags": ["architecture", "heritage", "photography", "outdoor"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Exterior viewing only, paved area"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Jalan Raja, KL",
+    "rating": 4.6, "avg_spend_myr": 0, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_pwtc",
+    "name": "Putra World Trade Centre Area",
+    "type": "attraction",
+    "location": {"lat": 3.1736, "lng": 101.6938},
+    "tags": ["urban", "indoor", "events"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Full accessibility"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Jalan Tun Ismail, KL",
+    "rating": 4.0, "avg_spend_myr": 30, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_signature_kl",
+    "name": "Signature Hotel (Bukit Bintang)",
+    "type": "hotel",
+    "location": {"lat": 3.1470, "lng": 101.7110},
+    "tags": ["hotel", "mid_range", "central"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Accessible rooms available"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Jalan Bukit Bintang, KL",
+    "rating": 4.2, "avg_spend_myr": 280, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_concorde_kl",
+    "name": "Concorde Hotel KL",
+    "type": "hotel",
+    "location": {"lat": 3.1546, "lng": 101.7142},
+    "tags": ["hotel", "premium", "central"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "JAKIM"},
+      "accessibility": {"wheelchair": true, "notes": "Fully accessible rooms"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "Jalan Sultan Ismail, KL",
+    "rating": 4.4, "avg_spend_myr": 400, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_grand_hyatt_kl",
+    "name": "Grand Hyatt Kuala Lumpur",
+    "type": "hotel",
+    "location": {"lat": 3.1555, "lng": 101.7130},
+    "tags": ["hotel", "luxury", "skyline_view", "premium"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "JAKIM"},
+      "accessibility": {"wheelchair": true, "notes": "Fully accessible"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "12, Jalan Pinang, KL",
+    "rating": 4.6, "avg_spend_myr": 850, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_kl_journal",
+    "name": "The KL Journal Hotel",
+    "type": "hotel",
+    "location": {"lat": 3.1467, "lng": 101.7110},
+    "tags": ["hotel", "boutique", "stylish", "instagrammable"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "N/A"},
+      "accessibility": {"wheelchair": true, "notes": "Lifts, accessible rooms"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": true
+    },
+    "photos": [],
+    "address": "30, Jalan Beremi, Bukit Bintang",
+    "rating": 4.4, "avg_spend_myr": 350, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_skybar_traders",
+    "name": "SkyBar at Traders Hotel",
+    "type": "attraction",
+    "location": {"lat": 3.1555, "lng": 101.7110},
+    "tags": ["bar", "skyline", "nightlife", "non_halal"],
+    "constraints_met": {
+      "halal": {"certified": false, "body": null},
+      "accessibility": {"wheelchair": true, "notes": "Lift access"},
+      "vegetarian": true, "vegan": false, "gluten_free": false, "nut_free": false
+    },
+    "photos": [],
+    "address": "Traders Hotel, KLCC",
+    "rating": 4.3, "avg_spend_myr": 120, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_helipad_lounge",
+    "name": "Heli Lounge Bar (Menara KH)",
+    "type": "attraction",
+    "location": {"lat": 3.1500, "lng": 101.7140},
+    "tags": ["bar", "skyline", "nightlife", "non_halal"],
+    "constraints_met": {
+      "halal": {"certified": false, "body": null},
+      "accessibility": {"wheelchair": false, "notes": "Spiral staircase to rooftop"},
+      "vegetarian": true, "vegan": false, "gluten_free": false, "nut_free": false
+    },
+    "photos": [],
+    "address": "Menara KH, Jalan Sultan Ismail",
+    "rating": 4.4, "avg_spend_myr": 100, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_telawi_street",
+    "name": "Telawi Street Bistro",
+    "type": "restaurant",
+    "location": {"lat": 3.1294, "lng": 101.6725},
+    "tags": ["halal_friendly", "western", "cafe", "brunch"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "self_declared"},
+      "accessibility": {"wheelchair": true, "notes": "Ground floor"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": false
+    },
+    "photos": [],
+    "address": "Bangsar Baru, KL",
+    "rating": 4.2, "avg_spend_myr": 60, "linkage_score": 0, "success_rate": 0, "active": true
+  },
+  {
+    "id": "biz_rebung_terrace",
+    "name": "Rebung Terrace (Bangsar)",
+    "type": "cafe",
+    "location": {"lat": 3.1280, "lng": 101.6740},
+    "tags": ["halal_jakim", "cafe", "outdoor_terrace"],
+    "constraints_met": {
+      "halal": {"certified": true, "body": "JAKIM"},
+      "accessibility": {"wheelchair": true, "notes": "Step-free terrace"},
+      "vegetarian": true, "vegan": true, "gluten_free": true, "nut_free": false
+    },
+    "photos": [],
+    "address": "Bangsar, KL",
+    "rating": 4.4, "avg_spend_myr": 40, "linkage_score": 0, "success_rate": 0, "active": true
+  }
+]
