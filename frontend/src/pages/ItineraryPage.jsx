@@ -26,29 +26,48 @@ export default function ItineraryPage() {
     }
   }, [tripId, trip, loadById]);
 
-  if (loading || !trip) return <div className="container"><SkeletonLoader /></div>;
+  if (loading || !trip) return <div className="container" style={{ paddingTop: 32 }}><SkeletonLoader /></div>;
 
   const linkageById = Object.fromEntries(linkages.map((l) => [l.id, l]));
   const businessById = Object.fromEntries(businesses.map((b) => [b.id, b]));
 
   return (
-    <div className="container">
-      <header className="row mb-5" style={{ justifyContent: "space-between" }}>
-        <div>
-          <h1>{trip.city} · {trip.dates.start} → {trip.dates.end}</h1>
-          <div className="row mt-2">
-            {trip.constraint_profile.map((c) => (
-              <span key={c} className="chip success">{c}</span>
-            ))}
-            {trip.preferences.slice(0, 4).map((p) => (
-              <span key={p} className="chip">{p}</span>
-            ))}
+    <div className="container" style={{ paddingTop: 24 }}>
+      <header
+        className="card"
+        style={{
+          marginBottom: 24,
+          background: "linear-gradient(135deg, var(--brand-blue-soft) 0%, var(--bg-surface) 100%)",
+          border: "1px solid rgba(1,148,243,0.18)",
+        }}
+      >
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div className="text-muted" style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Your trip
+            </div>
+            <h1 style={{ marginTop: 4 }}>
+              {trip.city}
+            </h1>
+            <div className="text-secondary" style={{ fontSize: "0.9375rem", marginTop: 4 }}>
+              {trip.dates.start} → {trip.dates.end} ·{" "}
+              {trip.itinerary.length} day{trip.itinerary.length > 1 ? "s" : ""} ·{" "}
+              {linkages.length} verified linkages
+            </div>
+            <div className="row mt-3">
+              {trip.constraint_profile.map((c) => (
+                <span key={c} className="chip success">{c}</span>
+              ))}
+              {trip.preferences.slice(0, 4).map((p) => (
+                <span key={p} className="chip brand">{p}</span>
+              ))}
+            </div>
           </div>
+          <LanguageSwitcher />
         </div>
-        <LanguageSwitcher />
       </header>
 
-      <div className="grid-2">
+      <div className="itinerary-grid">
         <motion.div
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
@@ -63,7 +82,7 @@ export default function ItineraryPage() {
           />
         </motion.div>
 
-        <motion.div
+        <motion.aside
           initial={{ opacity: 0, x: 8 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4 }}
@@ -83,7 +102,7 @@ export default function ItineraryPage() {
           <EthicalAIPanel trip={trip} linkages={linkages} />
 
           <HalalLogoScanner />
-        </motion.div>
+        </motion.aside>
       </div>
     </div>
   );

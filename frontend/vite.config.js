@@ -13,8 +13,8 @@ export default defineConfig({
         short_name: "KUPE",
         description:
           "Constraint-aware tourism, auto-crafted by AI. Halal & accessible itineraries with self-healing linkages.",
-        theme_color: "#0D7377",
-        background_color: "#0A0F1A",
+        theme_color: "#0194F3",
+        background_color: "#FFFFFF",
         display: "standalone",
         orientation: "portrait",
         scope: "/",

@@ -42,35 +42,35 @@ export default function PWAInstallPrompt() {
             margin: "0 auto",
           }}
         >
-          <div className="card glow row" style={{ justifyContent: "space-between" }}>
-            <div className="row">
+          <div className="card row" style={{ justifyContent: "space-between", boxShadow: "var(--shadow-widget)" }}>
+            <div className="row-tight" style={{ gap: 12 }}>
               <div
                 className="center"
                 style={{
                   width: 40, height: 40, borderRadius: 12,
-                  background: "rgba(20,189,235,0.16)", color: "#B8E6F5",
+                  background: "var(--brand-blue-soft)", color: "var(--brand-blue)",
                 }}
               >
                 <Smartphone size={20} />
               </div>
               <div>
-                <strong>Install KUPE</strong>
-                <div className="text-muted" style={{ fontSize: "0.85rem" }}>
+                <strong style={{ fontSize: "0.9375rem" }}>Install KUPE</strong>
+                <div className="text-secondary" style={{ fontSize: "0.8125rem" }}>
                   Add to home screen — works offline.
                 </div>
               </div>
             </div>
-            <div className="row">
-              <button className="btn primary" onClick={install} style={{ padding: "8px 14px" }}>
+            <div className="row-tight" style={{ gap: 6 }}>
+              <button className="btn primary sm" onClick={install}>
                 Install
               </button>
               <button
-                className="btn ghost"
+                className="btn ghost sm"
                 onClick={() => setVisible(false)}
-                style={{ padding: "8px 10px" }}
+                style={{ padding: "8px 10px", minHeight: "auto" }}
                 aria-label="Dismiss"
               >
-                <X size={16} />
+                <X size={14} />
               </button>
             </div>
           </div>

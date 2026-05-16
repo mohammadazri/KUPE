@@ -12,13 +12,22 @@ const containerStyle = {
   minHeight: 360,
 };
 
-const darkStyle = [
-  { elementType: "geometry", stylers: [{ color: "#0E1626" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#0A0F1A" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#B6C0CF" }] },
-  { featureType: "water", stylers: [{ color: "#0A1B2A" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1A2A3E" }] },
-  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+// Light, friendly Google Maps styling — minimal POIs, soft road colors
+const lightStyle = [
+  { elementType: "geometry", stylers: [{ color: "#FAFBFD" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#677488" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#FFFFFF" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#CFE8F7" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#0770CD" }] },
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#F2F4F7" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#FFFFFF" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#E5E9F0" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#FFF1EA" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#FFD3BC" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#E6F8E5" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
 ];
 
 export default function MapView({ trip, businesses, activeLinkage }) {
@@ -48,12 +57,14 @@ export default function MapView({ trip, businesses, activeLinkage }) {
 
   if (!apiKey) {
     return (
-      <div className="map-wrap card" style={{ minHeight: 360 }}>
-        <div className="center" style={{ height: 320 }}>
-          <div className="text-muted" style={{ textAlign: "center" }}>
-            🗺️ Map preview disabled — set <code>VITE_MAPS_BROWSER_KEY</code> in <code>.env.local</code>.
-            <br />
-            <span style={{ fontSize: "0.8rem" }}>Backend & AI still fully functional.</span>
+      <div className="map-wrap card flat" style={{ minHeight: 360, padding: 24 }}>
+        <div className="center" style={{ height: 320, flexDirection: "column", gap: 8 }}>
+          <div style={{ fontSize: "2rem" }}>🗺️</div>
+          <div className="text-secondary" style={{ textAlign: "center", fontSize: "0.9rem" }}>
+            Map preview disabled
+          </div>
+          <div className="text-muted" style={{ textAlign: "center", fontSize: "0.8125rem", maxWidth: 280 }}>
+            Set <code>VITE_MAPS_BROWSER_KEY</code> in <code>.env.local</code>. Backend & AI still fully functional.
           </div>
         </div>
       </div>
@@ -70,16 +81,17 @@ export default function MapView({ trip, businesses, activeLinkage }) {
           center={center}
           zoom={13}
           options={{
-            styles: darkStyle,
+            styles: lightStyle,
             disableDefaultUI: true,
             zoomControl: true,
-            backgroundColor: "#0A0F1A",
+            backgroundColor: "#FAFBFD",
+            clickableIcons: false,
           }}
         >
-          {points.map((p, i) => {
-            const active = activeLinkage?.business_id && businesses[activeLinkage.business_id]?.location;
+          {points.map((p) => {
             const isActive =
-              active &&
+              activeLinkage?.business_id &&
+              businesses[activeLinkage.business_id]?.location &&
               businesses[activeLinkage.business_id].location.lat === p.position.lat &&
               businesses[activeLinkage.business_id].location.lng === p.position.lng;
             return (
@@ -94,11 +106,11 @@ export default function MapView({ trip, businesses, activeLinkage }) {
                 }}
                 icon={{
                   path: window.google.maps.SymbolPath.CIRCLE,
-                  scale: isActive ? 14 : 10,
-                  fillColor: isActive ? "#FF6B35" : "#14BDEB",
+                  scale: isActive ? 15 : 11,
+                  fillColor: isActive ? "#FF5E1F" : "#0194F3",
                   fillOpacity: 1,
-                  strokeColor: "#0A0F1A",
-                  strokeWeight: 2,
+                  strokeColor: "#FFFFFF",
+                  strokeWeight: 2.5,
                 }}
                 title={p.name}
               />
@@ -114,8 +126,8 @@ export default function MapView({ trip, businesses, activeLinkage }) {
                 key={`route-${di}`}
                 path={path}
                 options={{
-                  strokeColor: "#14BDEB",
-                  strokeOpacity: 0.7,
+                  strokeColor: "#0194F3",
+                  strokeOpacity: 0.8,
                   strokeWeight: 3,
                   geodesic: true,
                 }}

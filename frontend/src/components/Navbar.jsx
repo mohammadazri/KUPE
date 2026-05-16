@@ -5,7 +5,6 @@ import { useAuth } from "../hooks/useAuth.jsx";
 export default function Navbar() {
   const { user, signIn, signOut } = useAuth();
   const loc = useLocation();
-  const hideOnTrip = loc.pathname.startsWith("/trip/");
 
   return (
     <nav
@@ -13,46 +12,84 @@ export default function Navbar() {
         position: "sticky",
         top: 0,
         zIndex: 50,
-        backdropFilter: "blur(14px) saturate(160%)",
-        WebkitBackdropFilter: "blur(14px) saturate(160%)",
-        background: "rgba(10, 15, 26, 0.7)",
-        borderBottom: "1px solid var(--border-glass)",
+        background: "var(--bg-surface)",
+        borderBottom: "1px solid var(--border-subtle)",
         padding: "12px 0",
       }}
     >
       <div className="container row" style={{ justifyContent: "space-between" }}>
-        <Link to="/" className="row" style={{ textDecoration: "none", color: "white" }}>
+        <Link to="/" className="row" style={{ textDecoration: "none", gap: 10 }}>
           <div
             className="center"
             style={{
               width: 36,
               height: 36,
               borderRadius: 10,
-              background: "linear-gradient(135deg, #14BDEB, #0D7377)",
+              background: "linear-gradient(135deg, #0194F3, #0770CD)",
               fontFamily: "var(--font-display)",
               fontWeight: 800,
-              color: "#042027",
+              color: "white",
+              position: "relative",
             }}
           >
             K
+            <span
+              style={{
+                position: "absolute",
+                top: -3,
+                right: -3,
+                width: 10,
+                height: 10,
+                borderRadius: 999,
+                background: "var(--brand-orange)",
+                border: "2px solid var(--bg-surface)",
+              }}
+            />
           </div>
-          <strong style={{ fontFamily: "var(--font-display)", letterSpacing: "0.02em" }}>
+          <strong
+            style={{
+              fontFamily: "var(--font-display)",
+              letterSpacing: "0.02em",
+              color: "var(--text-primary)",
+              fontSize: "1.0625rem",
+            }}
+          >
             KUPE
           </strong>
         </Link>
 
-        <div className="row hidden-mobile">
+        <div className="row hidden-mobile" style={{ gap: 4 }}>
           <NavLink
             to="/plan"
-            className={({ isActive }) => `chip ${isActive ? "brand" : ""}`}
-            style={{ textDecoration: "none" }}
+            style={({ isActive }) => ({
+              textDecoration: "none",
+              padding: "8px 14px",
+              borderRadius: 8,
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              color: isActive ? "var(--brand-blue)" : "var(--text-secondary)",
+              background: isActive ? "var(--brand-blue-soft)" : "transparent",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            })}
           >
             <Map size={14} /> Plan
           </NavLink>
           <NavLink
             to="/dashboard"
-            className={({ isActive }) => `chip ${isActive ? "brand" : ""}`}
-            style={{ textDecoration: "none" }}
+            style={({ isActive }) => ({
+              textDecoration: "none",
+              padding: "8px 14px",
+              borderRadius: 8,
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              color: isActive ? "var(--brand-blue)" : "var(--text-secondary)",
+              background: isActive ? "var(--brand-blue-soft)" : "transparent",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            })}
           >
             <LayoutDashboard size={14} /> Dashboard
           </NavLink>
@@ -61,25 +98,36 @@ export default function Navbar() {
         <div className="row">
           {user ? (
             <>
-              <div className="row hidden-mobile">
+              <div className="row hidden-mobile" style={{ gap: 8 }}>
                 {user.photoURL && (
                   <img
                     src={user.photoURL}
                     alt=""
-                    style={{ width: 28, height: 28, borderRadius: "50%" }}
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: "50%",
+                      border: "1px solid var(--border-subtle)",
+                    }}
                   />
                 )}
-                <span className="text-secondary" style={{ fontSize: "0.85rem" }}>
+                <span
+                  className="text-secondary"
+                  style={{ fontSize: "0.85rem", fontWeight: 500 }}
+                >
                   {user.displayName || user.email || "Traveller"}
                 </span>
               </div>
-              <button className="btn ghost" onClick={signOut} style={{ padding: "8px 14px" }}>
-                <LogOut size={16} /> Sign out
+              <button
+                className="btn ghost sm"
+                onClick={signOut}
+              >
+                <LogOut size={14} /> Sign out
               </button>
             </>
           ) : (
-            <button className="btn primary" onClick={signIn}>
-              <LogIn size={16} /> Sign in with Google
+            <button className="btn primary sm" onClick={signIn}>
+              <LogIn size={14} /> Sign in
             </button>
           )}
         </div>

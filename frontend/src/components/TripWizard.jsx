@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Calendar, Mic, Sparkles, Wand2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, Mic, Sparkles, MapPin } from "lucide-react";
 
 import ConstraintPicker from "./ConstraintPicker.jsx";
 import VoiceCapture from "./VoiceCapture.jsx";
@@ -11,24 +11,27 @@ const BUDGETS = ["budget", "mid", "premium"];
 
 function StepDots({ step, total }) {
   return (
-    <div className="row mb-5" style={{ gap: 8 }}>
-      {Array.from({ length: total }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            height: 6,
-            flex: 1,
-            borderRadius: 999,
-            background:
-              i < step
-                ? "linear-gradient(90deg, #14BDEB, #0D7377)"
-                : i === step
-                ? "rgba(20,189,235,0.5)"
-                : "rgba(255,255,255,0.08)",
-            transition: "background 0.3s ease",
-          }}
-        />
-      ))}
+    <div className="row mb-5" style={{ gap: 6 }}>
+      {Array.from({ length: total }).map((_, i) => {
+        const filled = i < step;
+        const current = i === step;
+        return (
+          <div
+            key={i}
+            style={{
+              height: 6,
+              flex: 1,
+              borderRadius: 999,
+              background: filled
+                ? "var(--brand-blue)"
+                : current
+                ? "var(--brand-blue-soft)"
+                : "var(--border-subtle)",
+              transition: "background 0.3s ease",
+            }}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -39,12 +42,24 @@ function todayISO(offset = 0) {
   return d.toISOString().slice(0, 10);
 }
 
+function readHeroSearch() {
+  try {
+    const raw = sessionStorage.getItem("kupe.heroSearch");
+    if (!raw) return null;
+    sessionStorage.removeItem("kupe.heroSearch");
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 export default function TripWizard({ onSubmit }) {
-  const [step, setStep] = useState(0);
+  const prefill = useMemo(() => readHeroSearch(), []);
+  const [step, setStep] = useState(prefill ? 2 : 0);
   const [city] = useState("Kuala Lumpur");
-  const [start, setStart] = useState(todayISO(1));
-  const [end, setEnd] = useState(todayISO(2));
-  const [constraints, setConstraints] = useState(["halal"]);
+  const [start, setStart] = useState(prefill?.start || todayISO(1));
+  const [end, setEnd] = useState(prefill?.end || todayISO(2));
+  const [constraints, setConstraints] = useState(prefill?.constraints || ["halal"]);
   const [preferences, setPreferences] = useState(["cultural", "food"]);
   const [pace, setPace] = useState("moderate");
   const [budget, setBudget] = useState("mid");
@@ -92,19 +107,29 @@ export default function TripWizard({ onSubmit }) {
         {step === 0 && (
           <motion.div key="s0" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}>
             <h2>Where to?</h2>
-            <p className="text-secondary mt-2">Kuala Lumpur is loaded for the demo. More cities scale via the same engine.</p>
-            <div className="card mt-4" style={{ background: "rgba(20,189,235,0.06)" }}>
+            <p className="text-secondary mt-2">Kuala Lumpur is loaded for the demo. The same engine scales to any city.</p>
+            <div
+              className="card tinted-blue mt-4"
+              style={{ borderColor: "rgba(1,148,243,0.2)" }}
+            >
               <div className="row">
                 <div
                   className="center"
-                  style={{ width: 60, height: 60, borderRadius: 16, background: "rgba(20,189,235,0.18)", color: "#B8E6F5" }}
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 14,
+                    background: "var(--brand-blue)",
+                    color: "white",
+                    flexShrink: 0,
+                  }}
                 >
-                  <Wand2 size={28} />
+                  <MapPin size={26} />
                 </div>
                 <div>
-                  <strong style={{ fontSize: "1.25rem" }}>Kuala Lumpur · Malaysia</strong>
-                  <div className="text-muted" style={{ fontSize: "0.9rem" }}>
-                    40+ JAKIM-certified & wheelchair-accessible POIs seeded.
+                  <strong style={{ fontSize: "1.125rem" }}>Kuala Lumpur · Malaysia</strong>
+                  <div className="text-secondary" style={{ fontSize: "0.875rem", marginTop: 2 }}>
+                    42 JAKIM-certified & wheelchair-accessible venues seeded.
                   </div>
                 </div>
               </div>
@@ -119,15 +144,15 @@ export default function TripWizard({ onSubmit }) {
             <div className="grid-2 mt-4">
               <div>
                 <label className="label">Start</label>
-                <div className="row mt-2">
-                  <Calendar size={16} color="#B8E6F5" />
+                <div className="row mt-2" style={{ gap: 8 }}>
+                  <Calendar size={16} color="var(--brand-blue)" />
                   <input className="input" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
                 </div>
               </div>
               <div>
                 <label className="label">End</label>
-                <div className="row mt-2">
-                  <Calendar size={16} color="#B8E6F5" />
+                <div className="row mt-2" style={{ gap: 8 }}>
+                  <Calendar size={16} color="var(--brand-blue)" />
                   <input className="input" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
                 </div>
               </div>
@@ -163,7 +188,11 @@ export default function TripWizard({ onSubmit }) {
                       onClick={() =>
                         setPreferences(active ? preferences.filter((x) => x !== p) : [...preferences, p])
                       }
-                      style={{ cursor: "pointer", border: 0 }}
+                      style={{
+                        cursor: "pointer",
+                        border: active ? "1px solid rgba(1,148,243,0.4)" : "1px solid var(--border-subtle)",
+                        fontWeight: active ? 600 : 500,
+                      }}
                     >
                       {p}
                     </button>
@@ -210,15 +239,15 @@ export default function TripWizard({ onSubmit }) {
               </div>
             </div>
 
-            <div className="card mt-5" style={{ background: "rgba(20,189,235,0.06)" }}>
+            <div className="card tinted-orange mt-5">
               <div className="row" style={{ justifyContent: "space-between" }}>
-                <div className="row">
-                  <Mic size={16} color="#B8E6F5" />
-                  <strong>Or just talk to it</strong>
+                <div className="row-tight">
+                  <Mic size={14} color="var(--brand-orange)" />
+                  <strong style={{ fontSize: "0.9375rem" }}>Or just talk to it</strong>
                 </div>
               </div>
-              <p className="text-muted mt-2" style={{ fontSize: "0.85rem" }}>
-                Hold to record. Speech-to-Text (Chirp 2) + Gemini will fill these fields.
+              <p className="text-secondary mt-2" style={{ fontSize: "0.8125rem" }}>
+                Tap & speak. Speech-to-Text (Chirp 2) + Gemini will fill these fields.
               </p>
               <div className="mt-3">
                 <VoiceCapture onParsed={onVoice} />
@@ -231,18 +260,24 @@ export default function TripWizard({ onSubmit }) {
           <motion.div key="s4" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}>
             <h2>Review & generate</h2>
             <p className="text-secondary mt-2">Last look. Click generate when ready.</p>
-            <div className="card mt-4" style={{ background: "rgba(255,255,255,0.03)" }}>
-              <div className="stack">
+            <div className="card flat mt-4" style={{ background: "var(--bg-page)" }}>
+              <div className="stack" style={{ gap: 10 }}>
                 <Row label="Destination" value={city} />
                 <Row label="Dates" value={`${start} → ${end}`} />
-                <Row label="Constraints" value={<>{constraints.map((c) => <span key={c} className="chip success">{c}</span>)}</>} />
-                <Row label="Preferences" value={<>{preferences.map((p) => <span key={p} className="chip">{p}</span>)}</>} />
+                <Row
+                  label="Constraints"
+                  value={<>{constraints.map((c) => <span key={c} className="chip success">{c}</span>)}</>}
+                />
+                <Row
+                  label="Preferences"
+                  value={<>{preferences.map((p) => <span key={p} className="chip brand">{p}</span>)}</>}
+                />
                 <Row label="Pace · Budget" value={`${pace} · ${budget}`} />
                 <Row label="Party · Notes" value={`${partySize} ${notes ? "· " + notes : ""}`} />
               </div>
             </div>
             <div className="row mt-5">
-              <button type="button" className="btn primary pulse" onClick={submit} style={{ padding: "14px 26px" }}>
+              <button type="button" className="btn primary" onClick={submit}>
                 <Sparkles size={18} /> Generate my trip
               </button>
             </div>
@@ -255,7 +290,7 @@ export default function TripWizard({ onSubmit }) {
           <ArrowLeft size={16} /> Back
         </button>
         {step < total - 1 && (
-          <button className="btn primary" onClick={next} disabled={!valid}>
+          <button className="btn secondary" onClick={next} disabled={!valid}>
             Next <ArrowRight size={16} />
           </button>
         )}
@@ -266,9 +301,13 @@ export default function TripWizard({ onSubmit }) {
 
 function Row({ label, value }) {
   return (
-    <div className="row" style={{ justifyContent: "space-between" }}>
-      <div className="text-muted">{label}</div>
-      <div className="row" style={{ gap: 6 }}>{value || "—"}</div>
+    <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+      <div className="text-muted" style={{ fontSize: "0.8125rem", minWidth: 110, fontWeight: 500 }}>
+        {label}
+      </div>
+      <div className="row-tight" style={{ gap: 6, justifyContent: "flex-end", flex: 1, flexWrap: "wrap", color: "var(--text-primary)", fontWeight: 500 }}>
+        {value || "—"}
+      </div>
     </div>
   );
 }
