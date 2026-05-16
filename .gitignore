@@ -69,4 +69,7 @@ development_plan.pdf
 
 # --- Visual smoke-test screenshots at repo root (Playwright captures) ---
 kupe-*.png
+
+# --- Cloudflare tunnel logs ---
+.tunnel-*.log
 /.playwright-mcp
