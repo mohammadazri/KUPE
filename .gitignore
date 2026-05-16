@@ -67,3 +67,7 @@ backend/.places_cache/
 # --- Deleted dev artifact ---
 development_plan.pdf
 /.playwright-mcp
+
+
+#ignore slides folder
+/slides
