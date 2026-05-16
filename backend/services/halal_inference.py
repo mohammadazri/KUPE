@@ -10,29 +10,85 @@ constraint solver treats it like any other check — except `body` will read
 from __future__ import annotations
 
 import logging
-from typing import Iterable
+from typing import Iterable, Optional
 
 from services import gemini_client
 
 log = logging.getLogger("kupe.halal_inference")
 
 
+# Countries where halal food is the local norm. In these markets, restaurants
+# are expected to serve halal unless the name/cuisine explicitly says otherwise
+# (pork specialty, bar, izakaya, etc.). Names taken from Google Places'
+# typical `formattedAddress` country segment — match case-insensitively.
+_MUSLIM_MAJORITY_COUNTRIES = frozenset({
+    "malaysia", "indonesia", "brunei", "brunei darussalam",
+    "united arab emirates", "uae",
+    "saudi arabia", "ksa",
+    "oman", "qatar", "kuwait", "bahrain", "yemen",
+    "egypt", "jordan", "lebanon", "syria", "iraq", "palestine",
+    "turkey", "türkiye",
+    "pakistan", "bangladesh", "maldives",
+    "iran", "afghanistan",
+    "morocco", "tunisia", "algeria", "libya", "mauritania",
+    "azerbaijan", "uzbekistan", "kazakhstan", "kyrgyzstan",
+    "tajikistan", "turkmenistan",
+    "albania", "kosovo", "bosnia and herzegovina",
+    "somalia", "djibouti", "senegal", "mali", "niger", "chad",
+    "sudan", "gambia", "the gambia", "comoros", "sierra leone",
+    "guinea", "burkina faso", "nigeria",
+})
+
+
+def _country_from_address(address: Optional[str]) -> Optional[str]:
+    """Google's formattedAddress is comma-separated, country last."""
+    if not address:
+        return None
+    last = address.rsplit(",", 1)[-1].strip()
+    return last or None
+
+
+def _region_default(address: Optional[str]) -> str:
+    country = _country_from_address(address)
+    if country and country.lower() in _MUSLIM_MAJORITY_COUNTRIES:
+        return "muslim_majority"
+    return "other"
+
+
 PROMPT_TEMPLATE = """You are a Halal-compliance assistant for Muslim travelers.
 
-For EACH restaurant below, decide whether it is plausibly halal-friendly based on
-its name, types, editorial summary, and a sample review. A place is halal-likely if:
-- Its name or types explicitly indicate halal (e.g., halal, muslim-friendly, mamak,
-  nasi kandar, kebab, biryani, tandoori, shawarma, Middle-Eastern cuisine).
-- Its editorial summary or review mentions halal certification or Muslim-friendly food.
-- It serves a cuisine that is traditionally halal (e.g., Turkish, Middle-Eastern,
-  Indonesian/Malay vegetarian-leaning).
+For EACH restaurant below, decide whether it is plausibly halal-friendly. Each
+candidate carries an `address` and a precomputed `region_default` that you MUST
+use as your prior.
 
-A place is NOT halal-likely if:
-- It is a bar, pub, izakaya, brewery, or alcohol-focused venue.
-- It primarily serves pork or non-halal meats (bak kut teh, char siu, ham, bacon).
-- It is a Western-style steakhouse or seafood place without explicit halal claims.
+DECISION RULES:
 
-When in doubt, default to FALSE — false positives erode user trust.
+region_default = "muslim_majority"
+  (Malaysia, Indonesia, Brunei, UAE, Saudi Arabia, Turkey, Pakistan, Egypt, etc.)
+  Local norm is halal. DEFAULT halal=true with confidence 0.75-0.85.
+  Return halal=false ONLY when one of these negative signals is present:
+    • Name/types mention pork, bacon, ham, bak kut teh, char siu, siu yuk,
+      lechon, or other pork-specialty food
+    • Name/types include bar, pub, brewery, izakaya, wine bar, cocktail bar,
+      sake, beer hall
+    • Review explicitly says "not halal", "pork is the specialty", or
+      describes alcohol as the main draw
+  IMPORTANT: in these regions, Western/Japanese/Chinese cuisine names alone
+  are NOT a negative signal. Chains and Mamak-style stalls adapt to halal
+  norms; a "sushi" or "burger" place in Malaysia is almost always halal.
+
+region_default = "other"
+  Default halal=false with confidence 0.7. Return halal=true ONLY with explicit
+  positive signals:
+    • Name/types include halal, muslim-friendly, mamak, nasi kandar, kebab,
+      biryani, tandoori, shawarma, falafel, middle-eastern, turkish, persian
+    • Editorial or review mentions halal certification
+
+CONFIDENCE GUIDANCE:
+  0.9+  : explicit positive (name match, halal in review) OR strong negative
+          (pork in name, bar/pub type)
+  0.75  : region-default decision with no contrary signal
+  <0.6  : reserved for genuinely conflicting signals
 
 Return ONLY a JSON object of this exact shape (no extra commentary):
 {
@@ -63,6 +119,8 @@ async def infer_batch(candidates: list[dict]) -> dict[str, dict]:
             "types": (c.get("types") or [])[:6],
             "editorial_summary": (c.get("editorial_summary") or "")[:200],
             "top_review": (c.get("top_review") or "")[:200],
+            "address": c.get("address"),
+            "region_default": _region_default(c.get("address")),
         }
         for c in candidates
         if c.get("place_id")

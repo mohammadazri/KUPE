@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { Star, MoonStar, Accessibility, MapPin, Sparkles, ShieldCheck, Clock, Quote } from "lucide-react";
 import { getPhotoForBusiness } from "../utils/photos.js";
 import { getPlacePhotoUrl } from "../utils/placesPhoto.js";
+import PhotoLightbox from "./PhotoLightbox.jsx";
 
 const MAPS_KEY = import.meta.env.VITE_MAPS_BROWSER_KEY;
 
@@ -31,6 +33,7 @@ export default function BusinessCard({ business, compact = false }) {
   const fallback = getPhotoForBusiness(business);
   const [photo, setPhoto] = useState(fallback);
   const [errored, setErrored] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,9 +69,26 @@ export default function BusinessCard({ business, compact = false }) {
   const initial = (business.name || "?").trim().charAt(0).toUpperCase();
 
   if (compact) {
+    const thumbClickable = !errored;
+    const openLightbox = (e) => {
+      e.stopPropagation();
+      setLightboxOpen(true);
+    };
+    const onThumbKeyDown = (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openLightbox(e);
+      }
+    };
     return (
+      <>
       <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
         <div
+          onClick={thumbClickable ? openLightbox : undefined}
+          onKeyDown={thumbClickable ? onThumbKeyDown : undefined}
+          role={thumbClickable ? "button" : undefined}
+          tabIndex={thumbClickable ? 0 : undefined}
+          aria-label={thumbClickable ? `View photo of ${business.name}` : undefined}
           style={{
             width: 64,
             height: 64,
@@ -81,6 +101,7 @@ export default function BusinessCard({ business, compact = false }) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            cursor: thumbClickable ? "zoom-in" : "default",
           }}
         >
           {errored ? (
@@ -147,6 +168,16 @@ export default function BusinessCard({ business, compact = false }) {
           </div>
         </div>
       </div>
+      <AnimatePresence>
+        {lightboxOpen && (
+          <PhotoLightbox
+            business={business}
+            thumbnailSrc={photo}
+            onClose={() => setLightboxOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+      </>
     );
   }
 

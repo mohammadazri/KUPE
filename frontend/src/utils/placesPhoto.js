@@ -11,8 +11,8 @@
  */
 
 const CITY = import.meta.env.VITE_DEFAULT_CITY || "Kuala Lumpur";
-const STORAGE_KEY = "kupe:placesPhoto:v1";
-const MAX_WIDTH = 800;
+const STORAGE_KEY = "kupe:placesPhoto:v2";
+const DEFAULT_MAX_WIDTH = 800;
 
 const memoryCache = new Map();
 const inflight = new Map();
@@ -75,7 +75,7 @@ async function getPlaceClass() {
   return lib.Place;
 }
 
-async function tryQuery(Place, textQuery, locationBias) {
+async function tryQuery(Place, textQuery, locationBias, maxWidth) {
   try {
     const request = {
       textQuery,
@@ -87,7 +87,7 @@ async function tryQuery(Place, textQuery, locationBias) {
     if (!places?.length) return null;
     const photos = places[0].photos;
     if (!photos?.length) return null;
-    return photos[0].getURI({ maxWidth: MAX_WIDTH });
+    return photos[0].getURI({ maxWidth });
   } catch (err) {
     if (typeof console !== "undefined") {
       console.warn("[placesPhoto] searchByText failed:", err?.message || err);
@@ -96,7 +96,7 @@ async function tryQuery(Place, textQuery, locationBias) {
   }
 }
 
-async function findPhoto(business) {
+async function findPhoto(business, maxWidth) {
   const Place = await getPlaceClass();
   let locationBias = null;
   if (business.location?.lat && business.location?.lng) {
@@ -117,24 +117,25 @@ async function findPhoto(business) {
   ].filter((q, i, arr) => arr.indexOf(q) === i);
 
   for (const q of queries) {
-    const url = await tryQuery(Place, q, locationBias);
+    const url = await tryQuery(Place, q, locationBias, maxWidth);
     if (url) return url;
   }
   return null;
 }
 
-export async function getPlacePhotoUrl(business) {
+export async function getPlacePhotoUrl(business, { maxWidth = DEFAULT_MAX_WIDTH } = {}) {
   if (!business?.name) return null;
   if (!diskLoaded) { loadDiskCache(); diskLoaded = true; }
 
-  const key = business.id || business._id || business.name;
+  const baseKey = business.id || business._id || business.name;
+  const key = `${baseKey}:${maxWidth}`;
   if (memoryCache.has(key)) return memoryCache.get(key);
   if (inflight.has(key)) return inflight.get(key);
 
   const promise = (async () => {
     const ok = await waitForPlaces();
     if (!ok) return null;
-    const url = await findPhoto(business);
+    const url = await findPhoto(business, maxWidth);
     memoryCache.set(key, url);
     persist();
     return url;

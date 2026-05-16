@@ -11,6 +11,7 @@ import MapView from "../components/MapView.jsx";
 import LinkageCard from "../components/LinkageCard.jsx";
 import SelfHealDemo from "../components/SelfHealDemo.jsx";
 import EthicalAIFooter from "../components/EthicalAIFooter.jsx";
+import DirectionsModal from "../components/DirectionsModal.jsx";
 import LanguageSwitcher from "../components/LanguageSwitcher.jsx";
 import SkeletonLoader from "../components/SkeletonLoader.jsx";
 import HalalLogoScanner from "../components/HalalLogoScanner.jsx";
@@ -22,6 +23,8 @@ export default function ItineraryPage() {
   const { trip, linkages, businesses, loadById, loading } = useTrip();
   const { target } = useLanguage();
   const [activeLinkage, setActiveLinkage] = useState(null);
+  const [activeDay, setActiveDay] = useState(0);
+  const [directionsOpen, setDirectionsOpen] = useState(false);
 
   const handleEditTrip = () => {
     if (!trip) return;
@@ -175,6 +178,9 @@ export default function ItineraryPage() {
             travelMode={travelMode}
             carPosition={carPosition}
             onCarPositionChange={setCarPosition}
+            activeDay={activeDay}
+            onActiveDayChange={setActiveDay}
+            onExpand={() => setDirectionsOpen(true)}
           />
 
           {activeLinkage && (
@@ -190,6 +196,19 @@ export default function ItineraryPage() {
         </motion.aside>
       </div>
       <EthicalAIFooter trip={trip} linkages={linkages} />
+      <DirectionsModal
+        open={directionsOpen}
+        onClose={() => setDirectionsOpen(false)}
+        trip={trip}
+        businesses={businessById}
+        activeDay={activeDay}
+        onActiveDayChange={setActiveDay}
+        travelMode={travelMode}
+        onTravelModeChange={setTravelMode}
+        activeLinkage={activeLinkage}
+        carPosition={carPosition}
+        onCarPositionChange={setCarPosition}
+      />
     </div>
   );
 }

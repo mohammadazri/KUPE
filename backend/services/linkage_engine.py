@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
+import math
 import time
 from datetime import date, timedelta
 from typing import Iterable, Optional
@@ -51,6 +52,23 @@ SLOT_TEMPLATE: list[tuple[str, str, LinkageType]] = [
     ("19:00", "dinner", LinkageType.MEAL_ASSIGNMENT),
 ]
 
+# Seeded businesses are city-specific (currently KL only). When a trip's
+# lat/lng is known, exclude seeds farther than this from the trip centre so
+# KL data doesn't leak into Penang/Singapore/Tokyo trips. 50km comfortably
+# covers a single metro area (Klang Valley ~40km wide) while excluding any
+# other city worldwide.
+SEEDED_MAX_DISTANCE_KM = 50
+
+
+def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Great-circle distance between two coordinates, in kilometres."""
+    earth_radius_km = 6371.0
+    rlat1, rlat2 = math.radians(lat1), math.radians(lat2)
+    dlat = math.radians(lat2 - lat1)
+    dlng = math.radians(lng2 - lng1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(rlat1) * math.cos(rlat2) * math.sin(dlng / 2) ** 2
+    return 2 * earth_radius_km * math.asin(math.sqrt(a))
+
 
 def _anon_uid(uid: str) -> str:
     return "anon_" + hashlib.sha256(uid.encode()).hexdigest()[:10]
@@ -85,11 +103,24 @@ async def load_businesses(
     """
     rows = await fs.query_where("businesses", filters=[("active", "==", True)], limit=500)
     seeded: list[Business] = []
+    seeded_filtered_far = 0
     for r in rows:
         try:
-            seeded.append(Business(**{k: v for k, v in r.items() if not k.startswith("_")}))
+            biz = Business(**{k: v for k, v in r.items() if not k.startswith("_")})
         except Exception as exc:
             log.warning("skipping malformed business doc: %s", exc)
+            continue
+        if lat is not None and lng is not None and biz.location:
+            if _haversine_km(lat, lng, biz.location.lat, biz.location.lng) > SEEDED_MAX_DISTANCE_KM:
+                seeded_filtered_far += 1
+                continue
+        seeded.append(biz)
+
+    if seeded_filtered_far:
+        log.info(
+            "load_businesses: dropped %d seeded businesses >%dkm from trip centre (%.4f,%.4f)",
+            seeded_filtered_far, SEEDED_MAX_DISTANCE_KM, lat, lng,
+        )
 
     # No discovery requested → preserve legacy behaviour.
     if not city or lat is None or lng is None or not bucket_types:

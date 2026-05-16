@@ -8,11 +8,26 @@ from __future__ import annotations
 
 from models.schemas import Business, ConstraintCheck, ConstraintKey
 
+# Dietary constraints only apply to businesses that serve food. A museum or
+# park can't be "halal-certified" — requiring that filter on attractions
+# eliminates them from every trip with a dietary constraint.
+_FOOD_TYPES: frozenset[str] = frozenset({"restaurant", "cafe"})
+_DIETARY_CONSTRAINTS: frozenset[ConstraintKey] = frozenset({
+    ConstraintKey.HALAL,
+    ConstraintKey.VEGETARIAN,
+    ConstraintKey.VEGAN,
+    ConstraintKey.GLUTEN_FREE,
+    ConstraintKey.NUT_FREE,
+})
+
 
 def passes_hard_constraints(biz: Business, required: list[ConstraintKey]) -> bool:
     """Return True iff `biz` satisfies every hard constraint in `required`."""
     cm = biz.constraints_met
+    is_food = biz.type in _FOOD_TYPES
     for c in required:
+        if c in _DIETARY_CONSTRAINTS and not is_food:
+            continue
         if c == ConstraintKey.HALAL and not cm.halal.certified:
             return False
         if c == ConstraintKey.WHEELCHAIR and not cm.accessibility.wheelchair:
@@ -56,7 +71,10 @@ def explain_checks(biz: Business, required: list[ConstraintKey]) -> list[Constra
     checks: list[ConstraintCheck] = []
     cm = biz.constraints_met
     src = getattr(biz, "source", "seed") or "seed"
+    is_food = biz.type in _FOOD_TYPES
     for c in required:
+        if c in _DIETARY_CONSTRAINTS and not is_food:
+            continue
         if c == ConstraintKey.HALAL:
             checks.append(
                 ConstraintCheck(

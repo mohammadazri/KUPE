@@ -137,6 +137,21 @@ def _has_negative_halal_signal(place: dict) -> bool:
     return False
 
 
+def negative_halal_signal_for_business(biz: Business) -> bool:
+    """Re-derive the negative halal signal from a cached Business.
+
+    The cache-hit path in places_discovery doesn't have the raw place dict,
+    so it can't reuse `_has_negative_halal_signal`. The check is the same:
+    name regex + place-types intersection (cached as Business.tags).
+    """
+    if _HALAL_NEGATIVE.search(biz.name or ""):
+        return True
+    tags = set(biz.tags or [])
+    if tags & _NEGATIVE_TYPES:
+        return True
+    return False
+
+
 def _deterministic_halal(place: dict) -> tuple[bool, Optional[str]]:
     """Returns (is_halal, evidence_string)."""
     name = (place.get("displayName") or {}).get("text", "") or ""

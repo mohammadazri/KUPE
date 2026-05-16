@@ -9,7 +9,7 @@
  * Mode passed in is one of: WALKING | TRANSIT | DRIVING (matches our UI).
  */
 
-const STORAGE_KEY = "kupe:directions:v1";
+const STORAGE_KEY = "kupe:directions:v2";
 const FAILURE_TTL_MS = 5 * 60 * 1000;
 
 const memoryCache = new Map();
@@ -79,13 +79,51 @@ function fetchRoute(origin, dest, mode) {
       const route = result.routes[0];
       const leg = route.legs?.[0];
       if (!leg) return resolve(null);
-      const path = route.overview_path.map((p) => ({ lat: p.lat(), lng: p.lng() }));
+
+      const steps = (leg.steps || []).map((s) => {
+        const out = {
+          instructions: s.instructions || "",
+          maneuver: s.maneuver || null,
+          distance: s.distance?.text || "",
+          duration: s.duration?.text || "",
+          travel_mode: s.travel_mode || null,
+          path: (s.path || []).map((p) => ({ lat: p.lat(), lng: p.lng() })),
+        };
+        if (s.transit) {
+          const t = s.transit;
+          const line = t.line || {};
+          const vehicle = line.vehicle || {};
+          out.transit = {
+            line_name: line.name || line.short_name || "",
+            line_short: line.short_name || "",
+            line_color: line.color || null,
+            line_text_color: line.text_color || null,
+            vehicle_type: vehicle.type || "",
+            vehicle_name: vehicle.name || "",
+            vehicle_icon: vehicle.icon || vehicle.local_icon || null,
+            agency: (line.agencies || [])[0]?.name || "",
+            headsign: t.headsign || "",
+            num_stops: t.num_stops || 0,
+            departure_stop: t.departure_stop?.name || "",
+            arrival_stop: t.arrival_stop?.name || "",
+            departure_time: t.departure_time?.text || "",
+            arrival_time: t.arrival_time?.text || "",
+          };
+        }
+        return out;
+      });
+
       resolve({
-        path,
+        path: route.overview_path.map((p) => ({ lat: p.lat(), lng: p.lng() })),
         duration: leg.duration?.text || "",
         distance: leg.distance?.text || "",
         durationValue: leg.duration?.value || 0,
         distanceValue: leg.distance?.value || 0,
+        start_address: leg.start_address || "",
+        end_address: leg.end_address || "",
+        summary: route.summary || "",
+        warnings: route.warnings || [],
+        steps,
       });
     });
   });

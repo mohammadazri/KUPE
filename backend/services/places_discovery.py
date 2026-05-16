@@ -23,27 +23,29 @@ from models.schemas import Business, ConstraintKey
 from services import firestore_client as fs
 from services import places_client
 from services.constraint_solver import passes_hard_constraints
-from services.place_mapper import map_to_business
+from services.place_mapper import map_to_business, negative_halal_signal_for_business
 
 log = logging.getLogger("kupe.discovery")
 
 # 24h freshness for the index, in seconds.
 INDEX_TTL_S = 24 * 60 * 60
 
-# Discovery radius per city (metres). 5km covers a dense city centre.
-DISCOVERY_RADIUS_M = 5000
+# Discovery radius per city (metres). 10km covers a spread-out destination —
+# Penang Island (Georgetown ↔ Batu Ferringhi ~14km) or Klang Valley
+# (KLCC ↔ Mid Valley ~7km) — without dragging in adjacent cities.
+DISCOVERY_RADIUS_M = 10000
 
 # Map KUPE bucket types → Google Places New included types.
 # Each entry is a list because some buckets resolve to multiple Place types.
 _BUCKET_TO_PLACES_TYPES: dict[str, list[str]] = {
     "restaurant": ["restaurant"],
-    "cafe": ["cafe"],
+    "cafe": ["cafe", "bakery"],
     "attraction": ["tourist_attraction", "park", "museum"],
     "shopping": ["shopping_mall"],
 }
 
-# How many results to request per Places type.
-RESULTS_PER_TYPE = 12
+# How many results to request per Places type. 20 is Google's per-call max.
+RESULTS_PER_TYPE = 20
 
 
 def _city_slug(city: str) -> str:
@@ -81,6 +83,25 @@ async def _hydrate_business_from_cache(place_id: str) -> Optional[Business]:
         return None
 
 
+def _derive_meta_from_business(biz: Business) -> dict:
+    """Recover halal-inference meta for a cached Business.
+
+    A restaurant/cafe is "ambiguous" when it has no positive halal evidence
+    (cached `constraints_met.halal.certified == False`) AND no negative
+    signal. Those candidates go to Gemini for inference; everything else is
+    already settled by the deterministic mapper logic.
+    """
+    if biz.type not in {"restaurant", "cafe"}:
+        return {"ambiguous_halal": False, "halal_evidence": None, "negative_halal_signal": False}
+    halal_match = biz.constraints_met.halal.certified
+    negative = negative_halal_signal_for_business(biz)
+    return {
+        "ambiguous_halal": (not halal_match) and (not negative),
+        "halal_evidence": biz.constraints_met.halal.body if halal_match else None,
+        "negative_halal_signal": negative,
+    }
+
+
 async def _persist_business(biz: Business) -> None:
     if not biz.place_id:
         return
@@ -109,9 +130,10 @@ async def _discover_one_type(
         # Hydrate from per-place cache. Skip places that mysteriously vanished.
         results = await asyncio.gather(*[_hydrate_business_from_cache(pid) for pid in place_ids])
         businesses = [b for b in results if b is not None]
-        # Inference meta isn't persisted because Gemini-ambiguous flag is only
-        # interesting at discovery time. We re-derive it lazily below.
-        metas = [{"ambiguous_halal": False, "halal_evidence": None, "negative_halal_signal": False} for _ in businesses]
+        # Re-derive ambiguous_halal from cached Business so the halal inference
+        # batch still re-evaluates cached restaurants (the cache stores the
+        # original mapper verdict, not the post-inference one).
+        metas = [_derive_meta_from_business(b) for b in businesses]
         log.info("Discovery cache HIT %s:%s → %d businesses", city_slug, place_type, len(businesses))
         return businesses, metas
 
@@ -230,6 +252,7 @@ async def discover_for_trip(
                 "types": biz.tags,
                 "editorial_summary": biz.editorial_summary,
                 "top_review": biz.top_review,
+                "address": biz.address,
             })
             pre_filtered.append(biz)
             continue

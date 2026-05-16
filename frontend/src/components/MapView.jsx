@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 // MarkerF + PolylineF are the React 18 Strict Mode-safe variants.
 import { GoogleMap, MarkerF, PolylineF, useJsApiLoader } from "@react-google-maps/api";
+import { Maximize2 } from "lucide-react";
 import { getRoute } from "../utils/directions.js";
 
 // Module-level constant — useJsApiLoader warns + reloads if this array
@@ -57,6 +58,65 @@ const STROKE_BY_MODE = {
   DRIVING: { weight: 5, opacity: 0.85, dash: null },
 };
 
+// Build a Google Maps "dashed line" icons array in the given color.
+// The trick: hide the polyline stroke (strokeOpacity: 0) and let these
+// repeated vertical-line symbols paint the dashes.
+function dashIcons(color) {
+  return [
+    {
+      icon: {
+        path: "M 0,-1 0,1",
+        strokeOpacity: 1,
+        strokeColor: color,
+        strokeWeight: 3,
+        scale: 3,
+      },
+      offset: "0",
+      repeat: "14px",
+    },
+  ];
+}
+
+function styleForStep(step, dayColor) {
+  if (step.travel_mode === "TRANSIT" && step.transit) {
+    return {
+      strokeColor: step.transit.line_color || dayColor,
+      strokeOpacity: 0.95,
+      strokeWeight: 6,
+      geodesic: false,
+      icons: null,
+    };
+  }
+  if (step.travel_mode === "WALKING") {
+    return {
+      strokeOpacity: 0,
+      strokeWeight: 4,
+      geodesic: false,
+      icons: dashIcons(dayColor),
+    };
+  }
+  // DRIVING / unknown → solid
+  return {
+    strokeColor: dayColor,
+    strokeOpacity: 0.85,
+    strokeWeight: 5,
+    geodesic: false,
+    icons: null,
+  };
+}
+
+// Style used when the route's steps aren't available — keeps the leg-mode look
+// consistent with the per-step renderer above.
+function styleForFallback(travelMode, color) {
+  if (travelMode === "WALKING") {
+    return { strokeOpacity: 0, strokeWeight: 4, geodesic: false, icons: dashIcons(color) };
+  }
+  if (travelMode === "TRANSIT") {
+    return { strokeColor: color, strokeOpacity: 0.85, strokeWeight: 6, geodesic: false, icons: null };
+  }
+  return { strokeColor: color, strokeOpacity: 0.85, strokeWeight: 5, geodesic: false, icons: null };
+}
+
 export default function MapView({
   trip,
   businesses,
@@ -64,13 +124,18 @@ export default function MapView({
   travelMode = "WALKING",
   carPosition = null,
   onCarPositionChange,
+  activeDay: activeDayProp,
+  onActiveDayChange,
+  onExpand,
 }) {
   const apiKey = import.meta.env.VITE_MAPS_BROWSER_KEY;
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: apiKey || "",
     libraries: MAPS_LIBRARIES,
   });
-  const [activeDay, setActiveDay] = useState(0);
+  const [internalActiveDay, setInternalActiveDay] = useState(0);
+  const activeDay = activeDayProp ?? internalActiveDay;
+  const setActiveDay = onActiveDayChange ?? setInternalActiveDay;
   const mapRef = useRef(null);
 
   // Group points by day with a stable sequence number per day.
@@ -294,40 +359,64 @@ export default function MapView({
                     {/* Car → first stop leg (DRIVING only) */}
                     {travelMode === "DRIVING" && carPosition && isFirstVisible && day.points[0] && (() => {
                       const carRoute = routes[`car-${day.dayIdx}-1`];
+                      if (carRoute?.steps?.length) {
+                        return carRoute.steps.map((step, si) => {
+                          const styling = styleForStep(step, CAR_COLOR);
+                          const path = step.path?.length ? step.path : null;
+                          if (!path) return null;
+                          return (
+                            <PolylineF key={`car-step-${si}`} path={path} options={styling} />
+                          );
+                        });
+                      }
                       const path = carRoute?.path || [carPosition, day.points[0].position];
                       return (
                         <PolylineF
                           key="car-leg"
                           path={path}
-                          options={{
-                            strokeColor: CAR_COLOR,
-                            strokeOpacity: 0.8,
-                            strokeWeight: stroke.weight,
-                            geodesic: false,
-                            icons: stroke.dash,
-                          }}
+                          options={styleForFallback(travelMode, CAR_COLOR)}
                         />
                       );
                     })()}
 
-                    {/* Between-stop legs */}
+                    {/* Between-stop legs — render per-step so walking vs transit segments are visually distinct */}
                     {day.points.slice(0, -1).map((from, i) => {
                       const to = day.points[i + 1];
                       const key = `${day.dayIdx}-${from.sequence}-${to.sequence}`;
                       const route = routes[key];
-                      const path = route?.path || [from.position, to.position];
-                      const isStraightFallback = !route;
+
+                      // No route fetched yet → straight-line fallback (faded)
+                      if (!route) {
+                        return (
+                          <PolylineF
+                            key={`${key}-fallback`}
+                            path={[from.position, to.position]}
+                            options={{
+                              ...styleForFallback(travelMode, day.color),
+                              strokeOpacity: travelMode === "WALKING" ? 0 : 0.35,
+                            }}
+                          />
+                        );
+                      }
+
+                      // Preferred path: render every step individually, styled by its travel_mode
+                      if (route.steps?.length) {
+                        return route.steps.map((step, si) => {
+                          const styling = styleForStep(step, day.color);
+                          const path = step.path?.length ? step.path : null;
+                          if (!path) return null;
+                          return (
+                            <PolylineF key={`${key}-step-${si}`} path={path} options={styling} />
+                          );
+                        });
+                      }
+
+                      // Fallback: render overview polyline with the mode style
                       return (
                         <PolylineF
                           key={key}
-                          path={path}
-                          options={{
-                            strokeColor: day.color,
-                            strokeOpacity: isStraightFallback ? 0.35 : stroke.opacity,
-                            strokeWeight: stroke.weight,
-                            geodesic: false,
-                            icons: stroke.dash,
-                          }}
+                          path={route.path}
+                          options={styleForFallback(travelMode, day.color)}
                         />
                       );
                     })}
@@ -384,6 +473,33 @@ export default function MapView({
                 />
               )}
             </GoogleMap>
+
+            {/* Expand button overlay */}
+            {onExpand && hasAnyPoints && (
+              <button
+                type="button"
+                className="map-expand-btn"
+                onClick={onExpand}
+                aria-label="Expand map with full directions"
+                title="View full directions"
+              >
+                <Maximize2 size={16} />
+              </button>
+            )}
+
+            {/* Walk vs transit legend (TRANSIT mode only) */}
+            {travelMode === "TRANSIT" && hasAnyPoints && (
+              <div className="map-mode-legend" aria-hidden="true">
+                <div className="map-mode-legend__item">
+                  <span className="map-mode-legend__swatch is-walk" />
+                  Walk
+                </div>
+                <div className="map-mode-legend__item">
+                  <span className="map-mode-legend__swatch is-transit" />
+                  Transit line
+                </div>
+              </div>
+            )}
 
             {/* Legend overlay (visible only in All-days mode) */}
             {activeDay === -1 && dayPoints.length > 1 && (
