@@ -58,14 +58,22 @@ export const BusinessesAPI = {
 };
 
 export const PlacesAPI = {
-  autocomplete(q, session) {
+  autocomplete(q, session, region = "MY") {
     return api
-      .get("/api/places/autocomplete", { params: { q, session } })
+      .get("/api/places/autocomplete", { params: { q, session, region } })
       .then((r) => r.data);
   },
   details(placeId, session) {
     return api
       .get(`/api/places/details/${placeId}`, { params: { session } })
+      .then((r) => r.data);
+  },
+  geocode(city) {
+    return api.get("/api/places/geocode", { params: { city } }).then((r) => r.data);
+  },
+  discoverNearby({ lat, lng, bucket_type = "restaurant", constraints = [], radius_m = 2500, max_results = 10, city_label = "nearby" }) {
+    return api
+      .post("/api/places/discover-nearby", { lat, lng, bucket_type, constraints, radius_m, max_results, city_label })
       .then((r) => r.data);
   },
 };

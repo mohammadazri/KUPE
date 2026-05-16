@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Pencil } from "lucide-react";
 
 import { useTrip } from "../hooks/useTrip.jsx";
 import { useLanguage } from "../hooks/useTranslation.jsx";
@@ -9,16 +10,58 @@ import ItineraryTimeline from "../components/ItineraryTimeline.jsx";
 import MapView from "../components/MapView.jsx";
 import LinkageCard from "../components/LinkageCard.jsx";
 import SelfHealDemo from "../components/SelfHealDemo.jsx";
-import EthicalAIPanel from "../components/EthicalAIPanel.jsx";
+import EthicalAIFooter from "../components/EthicalAIFooter.jsx";
 import LanguageSwitcher from "../components/LanguageSwitcher.jsx";
 import SkeletonLoader from "../components/SkeletonLoader.jsx";
 import HalalLogoScanner from "../components/HalalLogoScanner.jsx";
+import TravelModeSelector from "../components/TravelModeSelector.jsx";
 
 export default function ItineraryPage() {
   const { tripId } = useParams();
+  const navigate = useNavigate();
   const { trip, linkages, businesses, loadById, loading } = useTrip();
   const { target } = useLanguage();
   const [activeLinkage, setActiveLinkage] = useState(null);
+
+  const handleEditTrip = () => {
+    if (!trip) return;
+    sessionStorage.setItem(
+      "kupe.editTrip",
+      JSON.stringify({
+        city: trip.city,
+        start: trip.dates.start,
+        end: trip.dates.end,
+        constraints: trip.constraint_profile,
+        preferences: trip.preferences,
+        pace: trip.pace,
+        budget: trip.budget,
+      })
+    );
+    navigate("/plan");
+  };
+
+  const modeKey = `kupe:travel:${tripId}:mode`;
+  const carKey = `kupe:travel:${tripId}:car`;
+
+  const [travelMode, setTravelMode] = useState(() => {
+    try { return sessionStorage.getItem(modeKey) || "WALKING"; } catch { return "WALKING"; }
+  });
+  const [carPosition, setCarPosition] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem(carKey);
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  });
+
+  useEffect(() => {
+    try { sessionStorage.setItem(modeKey, travelMode); } catch { /* quota */ }
+  }, [travelMode, modeKey]);
+
+  useEffect(() => {
+    try {
+      if (carPosition) sessionStorage.setItem(carKey, JSON.stringify(carPosition));
+    } catch { /* quota */ }
+  }, [carPosition, carKey]);
 
   useEffect(() => {
     if (!trip || trip.id !== tripId) {
@@ -26,13 +69,32 @@ export default function ItineraryPage() {
     }
   }, [tripId, trip, loadById]);
 
+  const businessById = useMemo(
+    () => Object.fromEntries((businesses || []).map((b) => [b.id, b])),
+    [businesses]
+  );
+
+  // Seed the car marker at the trip's first stop the first time DRIVING is selected.
+  useEffect(() => {
+    if (travelMode !== "DRIVING" || carPosition || !trip?.itinerary?.length) return;
+    for (const day of trip.itinerary) {
+      const firstSlot = day.slots.find((s) => s.business_id);
+      if (!firstSlot) continue;
+      const b = businessById[firstSlot.business_id];
+      if (b?.location) {
+        // Offset slightly south so the car is visibly separate from the stop.
+        setCarPosition({ lat: b.location.lat - 0.008, lng: b.location.lng });
+        return;
+      }
+    }
+  }, [travelMode, carPosition, trip, businessById]);
+
   if (loading || !trip) return <div className="container" style={{ paddingTop: 32 }}><SkeletonLoader /></div>;
 
   const linkageById = Object.fromEntries(linkages.map((l) => [l.id, l]));
-  const businessById = Object.fromEntries(businesses.map((b) => [b.id, b]));
 
   return (
-    <div className="container" style={{ paddingTop: 24 }}>
+    <div className="container" style={{ paddingTop: 24, paddingBottom: 72 }}>
       <header
         className="card"
         style={{
@@ -63,7 +125,17 @@ export default function ItineraryPage() {
               ))}
             </div>
           </div>
-          <LanguageSwitcher />
+          <div className="row-tight" style={{ gap: 8 }}>
+            <button
+              type="button"
+              className="btn ghost sm"
+              onClick={handleEditTrip}
+              aria-label="Edit trip"
+            >
+              <Pencil size={14} /> Edit Trip
+            </button>
+            <LanguageSwitcher />
+          </div>
         </div>
       </header>
 
@@ -79,6 +151,7 @@ export default function ItineraryPage() {
             businesses={businessById}
             onLinkageClick={setActiveLinkage}
             translationTarget={target}
+            travelMode={travelMode}
           />
         </motion.div>
 
@@ -88,7 +161,21 @@ export default function ItineraryPage() {
           transition={{ duration: 0.4 }}
           className="stack"
         >
-          <MapView trip={trip} businesses={businessById} activeLinkage={activeLinkage} />
+          <div className="row" style={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+            <TravelModeSelector value={travelMode} onChange={setTravelMode} />
+            <span className="text-muted" style={{ fontSize: "0.75rem" }}>
+              Routes via Google Directions
+            </span>
+          </div>
+
+          <MapView
+            trip={trip}
+            businesses={businessById}
+            activeLinkage={activeLinkage}
+            travelMode={travelMode}
+            carPosition={carPosition}
+            onCarPositionChange={setCarPosition}
+          />
 
           {activeLinkage && (
             <LinkageCard
@@ -99,11 +186,10 @@ export default function ItineraryPage() {
 
           <SelfHealDemo trip={trip} linkages={linkages} businesses={businessById} />
 
-          <EthicalAIPanel trip={trip} linkages={linkages} />
-
           <HalalLogoScanner />
         </motion.aside>
       </div>
+      <EthicalAIFooter trip={trip} linkages={linkages} />
     </div>
   );
 }

@@ -54,7 +54,6 @@ export default function SelfHealDemo({ trip, linkages, businesses }) {
           <Flame size={16} color="var(--brand-orange)" />
           <strong>Self-Heal Demo</strong>
         </div>
-        <span className="chip orange">The wow moment</span>
       </div>
       <p className="text-secondary mt-2" style={{ fontSize: "0.875rem" }}>
         Pick any slot. We'll simulate the venue closing and watch KUPE re-link with a verified replacement in real time.

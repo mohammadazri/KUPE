@@ -28,22 +28,46 @@ def passes_hard_constraints(biz: Business, required: list[ConstraintKey]) -> boo
     return True
 
 
+def _halal_method(body: str | None, source: str) -> str:
+    """Pick the audit-method string based on the halal evidence body.
+
+    - "JAKIM" (or other certifying body string) → "jakim_db" (deterministic, gold-standard)
+    - "ai_inferred:..." → "ai_verified" (Gemini- or regex-inferred from Places data)
+    - Empty body + seeded source → "deterministic" (seed file's static booleans)
+    - Empty body + google_places source → "ai_verified" (it slipped through inference)
+    """
+    if not body:
+        return "deterministic" if source == "seed" else "ai_verified"
+    if body.startswith("ai_inferred:"):
+        return "ai_verified"
+    # Any concrete certifying body counts as a deterministic database check.
+    return "jakim_db" if body.upper() == "JAKIM" else "deterministic"
+
+
 def explain_checks(biz: Business, required: list[ConstraintKey]) -> list[ConstraintCheck]:
     """Produce per-constraint audit rows. Always passes (because pre-filtered)
-    but the method and source body are populated so the UI can display them."""
+    but the method and source body are populated so the UI can display them.
+
+    `method` distinguishes:
+    - "jakim_db" — JAKIM-certified seed data (green badge)
+    - "deterministic" — direct Places API field (e.g., accessibilityOptions)
+    - "ai_verified" — Gemini- or regex-inferred (amber "AI-inferred" badge)
+    """
     checks: list[ConstraintCheck] = []
     cm = biz.constraints_met
+    src = getattr(biz, "source", "seed") or "seed"
     for c in required:
         if c == ConstraintKey.HALAL:
             checks.append(
                 ConstraintCheck(
                     constraint="halal",
                     passed=cm.halal.certified,
-                    method=f"cert:{cm.halal.body}" if cm.halal.body else "deterministic",
+                    method=_halal_method(cm.halal.body, src),
                     note=cm.halal.body,
                 )
             )
         elif c == ConstraintKey.WHEELCHAIR:
+            # Discovery reads accessibility from Places API directly — still deterministic.
             checks.append(
                 ConstraintCheck(
                     constraint="wheelchair_accessible",
@@ -53,6 +77,7 @@ def explain_checks(biz: Business, required: list[ConstraintKey]) -> list[Constra
                 )
             )
         elif c == ConstraintKey.VEGETARIAN:
+            # Google Places exposes `servesVegetarianFood` directly → deterministic.
             checks.append(ConstraintCheck(constraint="vegetarian", passed=cm.vegetarian, method="deterministic"))
         elif c == ConstraintKey.VEGAN:
             checks.append(ConstraintCheck(constraint="vegan", passed=cm.vegan, method="deterministic"))

@@ -29,6 +29,19 @@ async def generate_trip(req: GenerateTripRequest, request: Request) -> GenerateT
     )
 
 
+async def _fetch_business_any(biz_id: str) -> dict | None:
+    """Look in `businesses` first, then `places_discovered` for live-discovered ids (gp_*)."""
+    doc = await fs.get("businesses", biz_id)
+    if doc:
+        return {k: v for k, v in doc.items() if not k.startswith("_") and k != "cached_at"}
+    if biz_id.startswith("gp_"):
+        place_id = biz_id[3:]
+        doc = await fs.get("places_discovered", place_id)
+        if doc:
+            return {k: v for k, v in doc.items() if not k.startswith("_") and k != "cached_at"}
+    return None
+
+
 @router.get("/{trip_id}")
 async def get_trip(trip_id: str) -> dict:
     doc = await fs.get("trips", trip_id)
@@ -44,7 +57,7 @@ async def get_trip(trip_id: str) -> dict:
     business_ids = {s.business_id for d in trip.itinerary for s in d.slots if s.business_id}
     businesses = []
     for bid in business_ids:
-        b = await fs.get("businesses", bid)
+        b = await _fetch_business_any(bid)
         if b:
             businesses.append(b)
     return {"trip": doc, "linkages": linkages, "businesses": businesses}

@@ -1,14 +1,27 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import TripWizard from "../components/TripWizard.jsx";
 import SkeletonLoader from "../components/SkeletonLoader.jsx";
 import { useTrip } from "../hooks/useTrip.jsx";
 
+function readEditPrefill() {
+  try {
+    const raw = sessionStorage.getItem("kupe.editTrip");
+    if (!raw) return null;
+    sessionStorage.removeItem("kupe.editTrip");
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 export default function PlannerPage() {
   const { generate, loading, error } = useTrip();
   const nav = useNavigate();
   const [stage, setStage] = useState("form"); // form | loading | done
+  const editPrefill = useMemo(() => readEditPrefill(), []);
+  const isEdit = Boolean(editPrefill);
 
   const handleGenerate = async (payload) => {
     setStage("loading");
@@ -30,9 +43,11 @@ export default function PlannerPage() {
           transition={{ duration: 0.3 }}
         >
           <header className="mb-5">
-            <h1>Plan your trip</h1>
+            <h1>{isEdit ? "Edit your trip" : "Plan your trip"}</h1>
             <p className="text-secondary mt-2">
-              Step-by-step. No overwhelm. Your constraints come first.
+              {isEdit
+                ? "Tweak any field and regenerate. Your current selections are pre-filled."
+                : "Step-by-step. No overwhelm. Your constraints come first."}
             </p>
           </header>
           {error && (
@@ -43,7 +58,7 @@ export default function PlannerPage() {
               </div>
             </div>
           )}
-          <TripWizard onSubmit={handleGenerate} />
+          <TripWizard onSubmit={handleGenerate} initialValues={editPrefill} />
         </motion.div>
       )}
 

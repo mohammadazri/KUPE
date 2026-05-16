@@ -16,7 +16,7 @@ from models.schemas import (
     Trip,
 )
 from services import firestore_client as fs
-from services import gemini_client
+from services import gemini_client, halal_inference
 from services.constraint_solver import explain_checks, filter_candidates
 from services.linkage_engine import _anon_uid, _slot_type_to_business_types, load_businesses
 from utils.ethical_ai import log_decision
@@ -59,12 +59,27 @@ async def heal_slot(
     old_linkage.outcome = reason
     await fs.set_("linkages", old_linkage.id, old_linkage.model_dump())
 
-    # Find replacement candidates
-    all_biz = await load_businesses()
+    # Find replacement candidates — re-run discovery for the same city/location
+    # so heal works on the live pool, not just the 40 seeded KL businesses.
+    allowed_types = _slot_type_to_business_types(broken_slot.type)
+    lat = trip.location.lat if trip.location else None
+    lng = trip.location.lng if trip.location else None
+
+    all_biz, ambiguous_halal = await load_businesses(
+        city=trip.city,
+        lat=lat,
+        lng=lng,
+        bucket_types=allowed_types,
+        constraints=trip.constraint_profile,
+    )
+
+    if ConstraintKey.HALAL in trip.constraint_profile and ambiguous_halal:
+        verdicts = await halal_inference.infer_batch(ambiguous_halal)
+        all_biz = halal_inference.apply_inference_to_businesses(all_biz, verdicts)
+
     used_ids = {s.business_id for d in trip.itinerary for s in d.slots if s.business_id}
     exclude = used_ids | {old_linkage.business_id}
 
-    allowed_types = _slot_type_to_business_types(broken_slot.type)
     pre_filtered = filter_candidates(all_biz, trip.constraint_profile, exclude_ids=exclude)
     pre_filtered = [b for b in pre_filtered if b.type in allowed_types]
 

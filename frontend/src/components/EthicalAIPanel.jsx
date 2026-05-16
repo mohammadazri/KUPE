@@ -44,7 +44,15 @@ export default function EthicalAIPanel({ trip, linkages }) {
       </div>
       <div className="stack mt-3" style={{ gap: 12 }}>
         {rows.map((r, i) => (
-          <div className="row" key={i} style={{ alignItems: "flex-start", gap: 12 }}>
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "flex-start",
+              gap: 12,
+            }}
+          >
             <div
               className="center"
               style={{
@@ -58,7 +66,7 @@ export default function EthicalAIPanel({ trip, linkages }) {
             >
               <r.icon size={16} />
             </div>
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--text-primary)" }}>
                 {r.title}
               </div>

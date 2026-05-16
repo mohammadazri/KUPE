@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 // MarkerF + PolylineF are the React 18 Strict Mode-safe variants.
 import { GoogleMap, MarkerF, PolylineF, useJsApiLoader } from "@react-google-maps/api";
+import { getRoute } from "../utils/directions.js";
 
 // Module-level constant — useJsApiLoader warns + reloads if this array
 // identity changes between renders. Keep it outside the component.
@@ -27,6 +28,8 @@ const DAY_COLORS = [
   "#0770CD", // Day 6 - dark blue
 ];
 
+const CAR_COLOR = "#1F2937";
+
 // Light, friendly map style — minimal POIs + soft road colors so markers pop.
 const lightStyle = [
   { elementType: "geometry", stylers: [{ color: "#FAFBFD" }] },
@@ -48,7 +51,20 @@ const lightStyle = [
   { featureType: "administrative.neighborhood", elementType: "labels.text.fill", stylers: [{ color: "#9AA3B0" }] },
 ];
 
-export default function MapView({ trip, businesses, activeLinkage }) {
+const STROKE_BY_MODE = {
+  WALKING: { weight: 4, opacity: 0.75, dash: [{ icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 }, offset: "0", repeat: "10px" }] },
+  TRANSIT: { weight: 5, opacity: 0.85, dash: null },
+  DRIVING: { weight: 5, opacity: 0.85, dash: null },
+};
+
+export default function MapView({
+  trip,
+  businesses,
+  activeLinkage,
+  travelMode = "WALKING",
+  carPosition = null,
+  onCarPositionChange,
+}) {
   const apiKey = import.meta.env.VITE_MAPS_BROWSER_KEY;
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: apiKey || "",
@@ -93,6 +109,60 @@ export default function MapView({ trip, businesses, activeLinkage }) {
 
   const visiblePoints = useMemo(() => visibleDays.flatMap((d) => d.points), [visibleDays]);
 
+  // Routes fetched from Directions API, keyed by segment.
+  // Key: `${dayIdx}-${fromSeq}-${toSeq}` for between-stop legs.
+  //      `car-${dayIdx}-1` for car → first stop (DRIVING + carPosition set).
+  const [routes, setRoutes] = useState({});
+  const [routesFailed, setRoutesFailed] = useState(false);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    let cancelled = false;
+    const pending = [];
+
+    visibleDays.forEach((day) => {
+      // Car → first stop (DRIVING mode only, only for the trip's first visible day)
+      const isFirstVisible = day.dayIdx === visibleDays[0]?.dayIdx;
+      if (
+        travelMode === "DRIVING" &&
+        carPosition &&
+        isFirstVisible &&
+        day.points[0]
+      ) {
+        const key = `car-${day.dayIdx}-1`;
+        pending.push({
+          key,
+          origin: carPosition,
+          dest: day.points[0].position,
+        });
+      }
+      // Between consecutive stops
+      for (let i = 0; i < day.points.length - 1; i++) {
+        const from = day.points[i];
+        const to = day.points[i + 1];
+        const key = `${day.dayIdx}-${from.sequence}-${to.sequence}`;
+        pending.push({ key, origin: from.position, dest: to.position });
+      }
+    });
+
+    // Fetch all in parallel; settle individually so a single failure doesn't
+    // block the others.
+    Promise.all(
+      pending.map(async ({ key, origin, dest }) => {
+        const route = await getRoute(origin, dest, travelMode);
+        return [key, route];
+      })
+    ).then((entries) => {
+      if (cancelled) return;
+      const next = {};
+      entries.forEach(([k, v]) => { next[k] = v; });
+      setRoutes(next);
+      setRoutesFailed(pending.length > 0 && entries.every(([, v]) => v === null));
+    });
+
+    return () => { cancelled = true; };
+  }, [isLoaded, visibleDays, travelMode, carPosition]);
+
   // Auto-fit bounds when the active day (or its points) changes.
   useEffect(() => {
     const map = mapRef.current;
@@ -104,8 +174,11 @@ export default function MapView({ trip, businesses, activeLinkage }) {
     }
     const bounds = new window.google.maps.LatLngBounds();
     visiblePoints.forEach((p) => bounds.extend(p.position));
+    if (travelMode === "DRIVING" && carPosition) {
+      bounds.extend(carPosition);
+    }
     map.fitBounds(bounds, { top: 60, right: 60, bottom: 60, left: 60 });
-  }, [activeDay, dayPoints]);
+  }, [activeDay, dayPoints, travelMode, carPosition]);
 
   if (!apiKey) {
     return (
@@ -212,47 +285,104 @@ export default function MapView({ trip, businesses, activeLinkage }) {
                 gestureHandling: "greedy",
               }}
             >
-              {visibleDays.map((day) => (
-                <Fragment key={`day-${day.dayIdx}`}>
-                  {/* Polyline first so markers sit on top */}
-                  {day.points.length >= 2 && (
-                    <PolylineF
-                      path={day.points.map((p) => p.position)}
-                      options={{
-                        strokeColor: day.color,
-                        strokeOpacity: 0.55,
-                        strokeWeight: 4,
-                        geodesic: false,
-                      }}
-                    />
-                  )}
-                  {day.points.map((p) => {
-                    const isActive = activeLinkage?.business_id === p.businessId;
-                    return (
-                      <MarkerF
-                        key={`${day.dayIdx}-${p.slotIdx}`}
-                        position={p.position}
-                        label={{
-                          text: `${p.sequence}`,
-                          color: "white",
-                          fontSize: isActive ? "14px" : "13px",
-                          fontWeight: "700",
-                        }}
-                        icon={{
-                          path: window.google.maps.SymbolPath.CIRCLE,
-                          scale: isActive ? 18 : 14,
-                          fillColor: isActive ? "#FF5E1F" : day.color,
-                          fillOpacity: 1,
-                          strokeColor: "#FFFFFF",
-                          strokeWeight: 3,
-                        }}
-                        title={`Day ${day.dayIdx + 1} · ${p.time} · ${p.name}`}
-                        zIndex={isActive ? 1000 : 100 - p.sequence}
-                      />
-                    );
-                  })}
-                </Fragment>
-              ))}
+              {visibleDays.map((day) => {
+                const stroke = STROKE_BY_MODE[travelMode] || STROKE_BY_MODE.WALKING;
+                const isFirstVisible = day.dayIdx === visibleDays[0]?.dayIdx;
+
+                return (
+                  <Fragment key={`day-${day.dayIdx}`}>
+                    {/* Car → first stop leg (DRIVING only) */}
+                    {travelMode === "DRIVING" && carPosition && isFirstVisible && day.points[0] && (() => {
+                      const carRoute = routes[`car-${day.dayIdx}-1`];
+                      const path = carRoute?.path || [carPosition, day.points[0].position];
+                      return (
+                        <PolylineF
+                          key="car-leg"
+                          path={path}
+                          options={{
+                            strokeColor: CAR_COLOR,
+                            strokeOpacity: 0.8,
+                            strokeWeight: stroke.weight,
+                            geodesic: false,
+                            icons: stroke.dash,
+                          }}
+                        />
+                      );
+                    })()}
+
+                    {/* Between-stop legs */}
+                    {day.points.slice(0, -1).map((from, i) => {
+                      const to = day.points[i + 1];
+                      const key = `${day.dayIdx}-${from.sequence}-${to.sequence}`;
+                      const route = routes[key];
+                      const path = route?.path || [from.position, to.position];
+                      const isStraightFallback = !route;
+                      return (
+                        <PolylineF
+                          key={key}
+                          path={path}
+                          options={{
+                            strokeColor: day.color,
+                            strokeOpacity: isStraightFallback ? 0.35 : stroke.opacity,
+                            strokeWeight: stroke.weight,
+                            geodesic: false,
+                            icons: stroke.dash,
+                          }}
+                        />
+                      );
+                    })}
+
+                    {day.points.map((p) => {
+                      const isActive = activeLinkage?.business_id === p.businessId;
+                      return (
+                        <MarkerF
+                          key={`${day.dayIdx}-${p.slotIdx}`}
+                          position={p.position}
+                          label={{
+                            text: `${p.sequence}`,
+                            color: "white",
+                            fontSize: isActive ? "14px" : "13px",
+                            fontWeight: "700",
+                          }}
+                          icon={{
+                            path: window.google.maps.SymbolPath.CIRCLE,
+                            scale: isActive ? 18 : 14,
+                            fillColor: isActive ? "#FF5E1F" : day.color,
+                            fillOpacity: 1,
+                            strokeColor: "#FFFFFF",
+                            strokeWeight: 3,
+                          }}
+                          title={`Day ${day.dayIdx + 1} · ${p.time} · ${p.name}`}
+                          zIndex={isActive ? 1000 : 100 - p.sequence}
+                        />
+                      );
+                    })}
+                  </Fragment>
+                );
+              })}
+
+              {/* Draggable car marker (DRIVING mode) */}
+              {travelMode === "DRIVING" && carPosition && (
+                <MarkerF
+                  position={carPosition}
+                  draggable
+                  onDragEnd={(e) => {
+                    if (!e?.latLng) return;
+                    onCarPositionChange?.({ lat: e.latLng.lat(), lng: e.latLng.lng() });
+                  }}
+                  label={{ text: "🚗", fontSize: "18px" }}
+                  icon={{
+                    path: window.google.maps.SymbolPath.CIRCLE,
+                    scale: 18,
+                    fillColor: "#FFFFFF",
+                    fillOpacity: 1,
+                    strokeColor: CAR_COLOR,
+                    strokeWeight: 3,
+                  }}
+                  title="Drag to set your car's location"
+                  zIndex={2000}
+                />
+              )}
             </GoogleMap>
 
             {/* Legend overlay (visible only in All-days mode) */}
@@ -306,6 +436,51 @@ export default function MapView({ trip, businesses, activeLinkage }) {
                       </div>
                     )
                 )}
+              </div>
+            )}
+
+            {/* Car-mode hint */}
+            {travelMode === "DRIVING" && carPosition && !routesFailed && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  left: 12,
+                  background: "rgba(255,255,255,0.96)",
+                  border: "1px solid var(--border-subtle)",
+                  borderRadius: 8,
+                  padding: "6px 10px",
+                  boxShadow: "var(--shadow-card)",
+                  fontSize: "0.75rem",
+                  color: "var(--text-secondary)",
+                  pointerEvents: "none",
+                }}
+              >
+                🚗 Drag the car marker to set your start
+              </div>
+            )}
+
+            {/* Routes failed banner — usually means Directions API not enabled on the Maps key */}
+            {routesFailed && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  left: 12,
+                  right: 12,
+                  background: "rgba(255, 244, 230, 0.98)",
+                  border: "1px solid #FFD3BC",
+                  borderRadius: 8,
+                  padding: "8px 12px",
+                  boxShadow: "var(--shadow-card)",
+                  fontSize: "0.75rem",
+                  color: "#8a4a1f",
+                  lineHeight: 1.4,
+                }}
+              >
+                <strong>Routes unavailable.</strong> Enable <em>Directions API</em> in
+                Google Cloud Console for the Maps key, or remove API restrictions on the key.
+                Straight-line fallback shown.
               </div>
             )}
 

@@ -1,10 +1,23 @@
+import { useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { LogIn, LogOut, LayoutDashboard, Map } from "lucide-react";
 import { useAuth } from "../hooks/useAuth.jsx";
 
+function displayLabel(user) {
+  if (user?.displayName) return user.displayName;
+  if (user?.email) return user.email.split("@")[0];
+  return "Traveller";
+}
+
+function initial(user) {
+  return (displayLabel(user)[0] || "U").toUpperCase();
+}
+
 export default function Navbar() {
   const { user, signIn, signOut } = useAuth();
   const loc = useLocation();
+  const [avatarBroken, setAvatarBroken] = useState(false);
+  const showImage = user?.photoURL && !avatarBroken;
 
   return (
     <nav
@@ -95,33 +108,26 @@ export default function Navbar() {
           </NavLink>
         </div>
 
-        <div className="row">
+        <div className="row-tight" style={{ gap: 8, flexShrink: 0 }}>
           {user ? (
             <>
-              <div className="row hidden-mobile" style={{ gap: 8 }}>
-                {user.photoURL && (
+              <div className="user-pill hidden-mobile" title={user.email || displayLabel(user)}>
+                {showImage ? (
                   <img
                     src={user.photoURL}
                     alt=""
-                    style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: "50%",
-                      border: "1px solid var(--border-subtle)",
-                    }}
+                    referrerPolicy="no-referrer"
+                    onError={() => setAvatarBroken(true)}
+                    className="user-pill__avatar"
                   />
+                ) : (
+                  <div className="user-pill__avatar user-pill__avatar--initials">
+                    {initial(user)}
+                  </div>
                 )}
-                <span
-                  className="text-secondary"
-                  style={{ fontSize: "0.85rem", fontWeight: 500 }}
-                >
-                  {user.displayName || user.email || "Traveller"}
-                </span>
+                <span className="user-pill__name">{displayLabel(user)}</span>
               </div>
-              <button
-                className="btn ghost sm"
-                onClick={signOut}
-              >
+              <button className="btn ghost sm" onClick={signOut}>
                 <LogOut size={14} /> Sign out
               </button>
             </>

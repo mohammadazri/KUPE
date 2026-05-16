@@ -14,24 +14,27 @@ import hashlib
 import logging
 import time
 from datetime import date, timedelta
-from typing import Iterable
+from typing import Iterable, Optional
 
 from models.schemas import (
     Business,
+    ConstraintKey,
     GenerateTripRequest,
     ItineraryDay,
     ItinerarySlot,
     Linkage,
     LinkageStatus,
     LinkageType,
+    Location,
     Trip,
     TripDates,
 )
 from services import firestore_client as fs
-from services import gemini_client
+from services import gemini_client, halal_inference, places_client, places_discovery
 from services.constraint_solver import (
     explain_checks,
     filter_candidates,
+    passes_hard_constraints,
 )
 from utils.ethical_ai import log_decision
 from utils.prompts import build_generate_prompt
@@ -61,18 +64,63 @@ def _slot_type_to_business_types(slot_type: str) -> list[str]:
     return ["restaurant", "attraction", "cafe", "shopping"]
 
 
-async def load_businesses() -> list[Business]:
-    """Load all active businesses from Firestore. Falls back to seed file in dev."""
+async def load_businesses(
+    *,
+    city: Optional[str] = None,
+    lat: Optional[float] = None,
+    lng: Optional[float] = None,
+    bucket_types: Optional[list[str]] = None,
+    constraints: Optional[list[ConstraintKey]] = None,
+) -> tuple[list[Business], list[dict]]:
+    """Load candidate businesses for a trip.
+
+    Returns (businesses, ambiguous_halal_candidates):
+    - businesses: seeded Firestore docs + live-discovered Google Places, deduped
+      on `place_id` (seeded wins — JAKIM-grade data trumps inferred).
+    - ambiguous_halal_candidates: discovered restaurants the caller should pass
+      to Gemini's halal inference batch before final filtering.
+
+    All kwargs are optional for backward compatibility — call sites that skip
+    them get seeded-only behaviour (original v1 flow).
+    """
     rows = await fs.query_where("businesses", filters=[("active", "==", True)], limit=500)
-    out: list[Business] = []
+    seeded: list[Business] = []
     for r in rows:
         try:
-            out.append(Business(**{k: v for k, v in r.items() if not k.startswith("_")}))
+            seeded.append(Business(**{k: v for k, v in r.items() if not k.startswith("_")}))
         except Exception as exc:
             log.warning("skipping malformed business doc: %s", exc)
-    if not out:
-        log.warning("No businesses found in Firestore — engine will return empty results")
-    return out
+
+    # No discovery requested → preserve legacy behaviour.
+    if not city or lat is None or lng is None or not bucket_types:
+        return seeded, []
+
+    discovered, ambiguous = await places_discovery.discover_for_trip(
+        city=city,
+        lat=lat,
+        lng=lng,
+        bucket_types=bucket_types,
+        constraints=constraints or [],
+    )
+
+    # Dedup on place_id — seeded wins when both have the same Google Places ID.
+    by_pid: dict[str, Business] = {}
+    no_pid: list[Business] = []
+    for b in seeded:
+        if b.place_id:
+            by_pid[b.place_id] = b
+        else:
+            no_pid.append(b)
+    for b in discovered:
+        if b.place_id and b.place_id not in by_pid:
+            by_pid[b.place_id] = b
+
+    merged = no_pid + list(by_pid.values())
+    log.info(
+        "load_businesses: %d seeded + %d discovered → %d merged (%d ambiguous halal)",
+        len(seeded), len(discovered), len(merged), len(ambiguous),
+    )
+    return merged, ambiguous
 
 
 def _days_between(start: str, end: str) -> int:
@@ -86,7 +134,34 @@ async def generate_trip(req: GenerateTripRequest, traveler_uid: str) -> dict:
     started = time.perf_counter()
     days = _days_between(req.start_date, req.end_date)
 
-    businesses = await load_businesses()
+    # Resolve city → (lat, lng). Prefer the frontend-supplied pair (autocomplete);
+    # fall back to geocoding the free-text city name.
+    lat: Optional[float] = req.lat
+    lng: Optional[float] = req.lng
+    if lat is None or lng is None:
+        geo = await places_client.geocode_city(req.city)
+        if not geo.get("error"):
+            lat = geo.get("lat")
+            lng = geo.get("lng")
+        else:
+            log.warning("Geocoding failed for city='%s': %s — discovery will be skipped", req.city, geo["error"])
+
+    # Bucket types needed by the slot template. Deduped.
+    bucket_types = sorted({btype for _, slot_type, _ in SLOT_TEMPLATE for btype in _slot_type_to_business_types(slot_type)})
+
+    businesses, ambiguous_halal = await load_businesses(
+        city=req.city,
+        lat=lat,
+        lng=lng,
+        bucket_types=bucket_types,
+        constraints=req.constraints,
+    )
+
+    # If halal is required and we have ambiguous candidates, run ONE batched Gemini call.
+    if ConstraintKey.HALAL in req.constraints and ambiguous_halal:
+        verdicts = await halal_inference.infer_batch(ambiguous_halal)
+        businesses = halal_inference.apply_inference_to_businesses(businesses, verdicts)
+
     pre_filtered = filter_candidates(businesses, req.constraints)
     log.info(
         "Engine: %d total → %d pass hard constraints %s",
@@ -98,6 +173,7 @@ async def generate_trip(req: GenerateTripRequest, traveler_uid: str) -> dict:
     trip = Trip(
         traveler_id=traveler_uid,
         city=req.city,
+        location=Location(lat=lat, lng=lng) if (lat is not None and lng is not None) else None,
         dates=TripDates(start=req.start_date, end=req.end_date),
         constraint_profile=req.constraints,
         preferences=req.preferences,

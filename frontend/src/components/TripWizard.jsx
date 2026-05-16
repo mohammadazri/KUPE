@@ -1,37 +1,53 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Calendar, Mic, Sparkles, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, Mic, Sparkles, MapPin, Globe } from "lucide-react";
 
+import CityAutocomplete from "./CityAutocomplete.jsx";
 import ConstraintPicker from "./ConstraintPicker.jsx";
 import VoiceCapture from "./VoiceCapture.jsx";
 
 const PREFS = ["outdoor", "cultural", "shopping", "food", "photography", "nature", "skyline", "wellness", "history"];
 const PACES = ["relaxed", "moderate", "adventurous"];
-const BUDGETS = ["budget", "mid", "premium"];
+
+// Tier mapping (matches backend BudgetTier enum)
+function budgetToTier(myr) {
+  if (myr < 1500) return "budget";
+  if (myr <= 5000) return "mid";
+  return "premium";
+}
+function tierToBudgetDefault(tier) {
+  return tier === "budget" ? 1000 : tier === "premium" ? 6000 : 3000;
+}
+
+const STEP_LABELS = ["Destination", "Dates", "Constraints", "Preferences", "Review"];
+
+const POPULAR_CITIES = [
+  { city: "Kuala Lumpur", lat: 3.139, lng: 101.6869 },
+  { city: "Penang", lat: 5.4164, lng: 100.3327 },
+  { city: "Singapore", lat: 1.3521, lng: 103.8198 },
+  { city: "Tokyo", lat: 35.6762, lng: 139.6503 },
+  { city: "Bangkok", lat: 13.7563, lng: 100.5018 },
+  { city: "Dubai", lat: 25.2048, lng: 55.2708 },
+];
 
 function StepDots({ step, total }) {
   return (
-    <div className="row mb-5" style={{ gap: 6 }}>
-      {Array.from({ length: total }).map((_, i) => {
-        const filled = i < step;
-        const current = i === step;
-        return (
-          <div
-            key={i}
-            style={{
-              height: 6,
-              flex: 1,
-              borderRadius: 999,
-              background: filled
-                ? "var(--brand-blue)"
-                : current
-                ? "var(--brand-blue-soft)"
-                : "var(--border-subtle)",
-              transition: "background 0.3s ease",
-            }}
-          />
-        );
-      })}
+    <div className="step-progress">
+      <div className="step-progress__track">
+        {Array.from({ length: total }).map((_, i) => {
+          const filled = i < step;
+          const current = i === step;
+          return (
+            <div
+              key={i}
+              className={`step-progress__pip ${filled ? "is-filled" : ""} ${current ? "is-current" : ""}`}
+            />
+          );
+        })}
+      </div>
+      <span className="step-progress__label">
+        Step {step + 1} of {total} · {STEP_LABELS[step] || ""}
+      </span>
     </div>
   );
 }
@@ -53,38 +69,52 @@ function readHeroSearch() {
   }
 }
 
-export default function TripWizard({ onSubmit }) {
-  const prefill = useMemo(() => readHeroSearch(), []);
-  const [step, setStep] = useState(prefill ? 2 : 0);
-  const [city] = useState("Kuala Lumpur");
+export default function TripWizard({ onSubmit, initialValues }) {
+  const heroPrefill = useMemo(() => readHeroSearch(), []);
+  const prefill = initialValues || heroPrefill;
+  // Edit-mode lands on the review step; hero-search lands on constraints; cold start at the top.
+  const [step, setStep] = useState(initialValues ? 4 : (heroPrefill ? 2 : 0));
+  const [destination, setDestination] = useState({
+    city: prefill?.city || "Kuala Lumpur",
+    lat: prefill?.lat ?? (Number(import.meta.env.VITE_DEFAULT_LAT) || 3.139),
+    lng: prefill?.lng ?? (Number(import.meta.env.VITE_DEFAULT_LNG) || 101.6869),
+    place_id: prefill?.place_id || null,
+  });
   const [start, setStart] = useState(prefill?.start || todayISO(1));
   const [end, setEnd] = useState(prefill?.end || todayISO(2));
   const [constraints, setConstraints] = useState(prefill?.constraints || ["halal"]);
-  const [preferences, setPreferences] = useState(["cultural", "food"]);
-  const [pace, setPace] = useState("moderate");
-  const [budget, setBudget] = useState("mid");
-  const [partySize, setPartySize] = useState(2);
-  const [notes, setNotes] = useState("");
+  const [preferences, setPreferences] = useState(prefill?.preferences || ["cultural", "food"]);
+  const [pace, setPace] = useState(prefill?.pace || "moderate");
+  const [budget, setBudget] = useState(
+    typeof prefill?.budget === "number"
+      ? prefill.budget
+      : tierToBudgetDefault(prefill?.budget || "mid")
+  );
+  const [partySize, setPartySize] = useState(prefill?.party_size || 2);
+  const [notes, setNotes] = useState(prefill?.notes || "");
 
   const total = 5;
 
   const valid = useMemo(() => {
+    if (step === 0) return Boolean(destination?.city);
     if (step === 1) return Boolean(start && end && start <= end);
     return true;
-  }, [step, start, end]);
+  }, [step, start, end, destination?.city]);
 
   const next = () => setStep((s) => Math.min(s + 1, total - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
   const submit = () => {
     onSubmit({
-      city,
+      city: destination.city,
+      lat: destination.lat ?? undefined,
+      lng: destination.lng ?? undefined,
       start_date: start,
       end_date: end,
       constraints,
       preferences,
       pace,
-      budget,
+      budget: budgetToTier(budget),
       party_size: Number(partySize) || 1,
       notes: notes || undefined,
     });
@@ -95,7 +125,7 @@ export default function TripWizard({ onSubmit }) {
     if (Array.isArray(parsed.constraints)) setConstraints(parsed.constraints);
     if (Array.isArray(parsed.preferences)) setPreferences(parsed.preferences);
     if (parsed.pace) setPace(parsed.pace);
-    if (parsed.budget) setBudget(parsed.budget);
+    if (parsed.budget) setBudget(tierToBudgetDefault(parsed.budget));
     if (parsed.party_size) setPartySize(parsed.party_size);
     if (parsed.notes) setNotes(parsed.notes);
   };
@@ -107,33 +137,71 @@ export default function TripWizard({ onSubmit }) {
         {step === 0 && (
           <motion.div key="s0" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}>
             <h2>Where to?</h2>
-            <p className="text-secondary mt-2">Kuala Lumpur is loaded for the demo. The same engine scales to any city.</p>
-            <div
-              className="card tinted-blue mt-4"
-              style={{ borderColor: "rgba(1,148,243,0.2)" }}
-            >
-              <div className="row">
-                <div
-                  className="center"
-                  style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 14,
-                    background: "var(--brand-blue)",
-                    color: "white",
-                    flexShrink: 0,
-                  }}
-                >
-                  <MapPin size={26} />
-                </div>
-                <div>
-                  <strong style={{ fontSize: "1.125rem" }}>Kuala Lumpur · Malaysia</strong>
-                  <div className="text-secondary" style={{ fontSize: "0.875rem", marginTop: 2 }}>
-                    42 JAKIM-certified & wheelchair-accessible venues seeded.
+            <p className="text-secondary mt-2">
+              Pick anywhere on earth. Live Google Places discovery finds real venues; KUPE verifies your constraints on top.
+            </p>
+
+            <div className="mt-4">
+              <label className="label">Destination</label>
+              <CityAutocomplete value={destination} onSelect={setDestination} defaultLabel={destination?.city} />
+
+              <div className="quick-chips" aria-label="Popular destinations">
+                {POPULAR_CITIES.map((c) => {
+                  const active = destination?.city === c.city;
+                  return (
+                    <button
+                      key={c.city}
+                      type="button"
+                      className="quick-chip"
+                      onClick={() => setDestination({ ...c, place_id: null })}
+                      style={
+                        active
+                          ? {
+                              background: "var(--brand-blue-soft)",
+                              borderColor: "rgba(1,148,243,0.45)",
+                              color: "var(--brand-blue-hover)",
+                              fontWeight: 600,
+                            }
+                          : undefined
+                      }
+                    >
+                      <MapPin size={12} /> {c.city}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {destination?.city && (
+              <div
+                className="card tinted-blue mt-4"
+                style={{ borderColor: "rgba(1,148,243,0.2)" }}
+              >
+                <div className="row">
+                  <div
+                    className="center"
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 12,
+                      background: "var(--brand-blue)",
+                      color: "white",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {destination.place_id ? <Globe size={22} /> : <MapPin size={22} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <strong style={{ fontSize: "1rem" }}>{destination.city}</strong>
+                    <div className="text-secondary" style={{ fontSize: "0.8125rem", marginTop: 2 }}>
+                      {destination.place_id
+                        ? "Live discovery via Google Places — real businesses, KUPE-verified constraints."
+                        : "Picked from popular cities. Type above to search anywhere on earth."}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </motion.div>
         )}
 
@@ -209,10 +277,19 @@ export default function TripWizard({ onSubmit }) {
                 </select>
               </div>
               <div>
-                <label className="label">Budget</label>
-                <select className="select mt-2" value={budget} onChange={(e) => setBudget(e.target.value)}>
-                  {BUDGETS.map((b) => <option key={b} value={b}>{b}</option>)}
-                </select>
+                <label className="label">Budget (MYR, whole trip)</label>
+                <input
+                  className="input mt-2"
+                  type="number"
+                  min={0}
+                  step={50}
+                  value={budget}
+                  onChange={(e) => setBudget(Number(e.target.value) || 0)}
+                  placeholder="e.g. 3000"
+                />
+                <div className="text-muted" style={{ fontSize: "0.75rem", marginTop: 4 }}>
+                  Maps to: <strong>{budgetToTier(budget)}</strong> tier
+                </div>
               </div>
             </div>
 
@@ -262,7 +339,7 @@ export default function TripWizard({ onSubmit }) {
             <p className="text-secondary mt-2">Last look. Click generate when ready.</p>
             <div className="card flat mt-4" style={{ background: "var(--bg-page)" }}>
               <div className="stack" style={{ gap: 10 }}>
-                <Row label="Destination" value={city} />
+                <Row label="Destination" value={destination.city} />
                 <Row label="Dates" value={`${start} → ${end}`} />
                 <Row
                   label="Constraints"
@@ -272,7 +349,7 @@ export default function TripWizard({ onSubmit }) {
                   label="Preferences"
                   value={<>{preferences.map((p) => <span key={p} className="chip brand">{p}</span>)}</>}
                 />
-                <Row label="Pace · Budget" value={`${pace} · ${budget}`} />
+                <Row label="Pace · Budget" value={`${pace} · MYR ${budget} (${budgetToTier(budget)})`} />
                 <Row label="Party · Notes" value={`${partySize} ${notes ? "· " + notes : ""}`} />
               </div>
             </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Star, MoonStar, Accessibility, MapPin } from "lucide-react";
+import { Star, MoonStar, Accessibility, MapPin, Sparkles, ShieldCheck, Clock, Quote } from "lucide-react";
 import { getPhotoForBusiness } from "../utils/photos.js";
 import { getPlacePhotoUrl } from "../utils/placesPhoto.js";
 
@@ -9,6 +9,22 @@ function streetViewUrl(business, size = "800x450") {
   if (!MAPS_KEY || !business?.location?.lat || !business?.location?.lng) return null;
   const { lat, lng } = business.location;
   return `https://maps.googleapis.com/maps/api/streetview?size=${size}&location=${lat},${lng}&fov=80&key=${MAPS_KEY}`;
+}
+
+// Determine the trust tier for the halal claim on a given business:
+// - "jakim" — seeded JAKIM-certified (green)
+// - "ai_inferred" — Gemini- or regex-inferred from Google Places (amber)
+// - "deterministic" — direct Places field (cyan/blue) — used for wheelchair, not halal
+// - null when no halal claim is being made
+function halalTier(business) {
+  const certified = business?.constraints_met?.halal?.certified;
+  if (!certified) return null;
+  const body = business?.constraints_met?.halal?.body || "";
+  if (body.startsWith("ai_inferred:")) return "ai_inferred";
+  if (body.toUpperCase() === "JAKIM") return "jakim";
+  if (body) return "deterministic";
+  // No body but certified=true + seed source → assume jakim-equivalent
+  return business?.source === "seed" ? "jakim" : "ai_inferred";
 }
 
 export default function BusinessCard({ business, compact = false }) {
@@ -42,6 +58,9 @@ export default function BusinessCard({ business, compact = false }) {
   if (!business) return null;
   const halal = business.constraints_met?.halal?.certified;
   const wheelchair = business.constraints_met?.accessibility?.wheelchair;
+  const hTier = halalTier(business);
+  const isLive = business.source === "google_places";
+  const openNow = business.opening_hours?.open_now;
 
   const placeholderBg = "linear-gradient(135deg, var(--brand-blue-soft) 0%, #E8EEF5 100%)";
   const initial = (business.name || "?").trim().charAt(0).toUpperCase();
@@ -90,14 +109,29 @@ export default function BusinessCard({ business, compact = false }) {
             <strong style={{ fontSize: "0.9375rem", color: "var(--text-primary)" }}>
               {business.name}
             </strong>
-            {halal && (
-              <span className="chip orange" style={{ padding: "2px 6px", fontSize: "0.6875rem" }}>
-                <MoonStar size={10} /> Halal
+            {halal && hTier === "jakim" && (
+              <span className="chip success" style={{ padding: "2px 6px", fontSize: "0.6875rem" }}>
+                <ShieldCheck size={10} /> JAKIM
+              </span>
+            )}
+            {halal && hTier === "ai_inferred" && (
+              <span className="chip orange" style={{ padding: "2px 6px", fontSize: "0.6875rem" }} title="Halal status inferred by AI — verify on-site">
+                <Sparkles size={10} /> AI-Halal
               </span>
             )}
             {wheelchair && (
               <span className="chip brand" style={{ padding: "2px 6px", fontSize: "0.6875rem" }}>
                 <Accessibility size={10} /> Access
+              </span>
+            )}
+            {openNow === true && (
+              <span className="chip success" style={{ padding: "2px 6px", fontSize: "0.6875rem" }}>
+                <Clock size={10} /> Open
+              </span>
+            )}
+            {openNow === false && (
+              <span className="chip" style={{ padding: "2px 6px", fontSize: "0.6875rem", color: "var(--text-muted)" }}>
+                <Clock size={10} /> Closed
               </span>
             )}
           </div>
@@ -109,6 +143,7 @@ export default function BusinessCard({ business, compact = false }) {
             {business.avg_spend_myr > 0 && (
               <> · <span style={{ color: "var(--brand-orange)", fontWeight: 600 }}>RM{business.avg_spend_myr}</span></>
             )}
+            {isLive && <> · <span className="text-muted" style={{ fontSize: "0.6875rem" }}>via Google</span></>}
           </div>
         </div>
       </div>
@@ -143,8 +178,18 @@ export default function BusinessCard({ business, compact = false }) {
           />
         )}
         <div className="photo-overlay-top">
-          <div className="row-tight" style={{ gap: 6 }}>
-            {halal && (
+          <div className="row-tight" style={{ gap: 6, flexWrap: "wrap" }}>
+            {halal && hTier === "jakim" && (
+              <span className="badge green" title="JAKIM-certified Halal">
+                <ShieldCheck size={11} /> JAKIM Halal
+              </span>
+            )}
+            {halal && hTier === "ai_inferred" && (
+              <span className="badge orange" title="Halal inferred by AI from Google Places data — please verify on-site">
+                <Sparkles size={11} /> AI-Inferred Halal
+              </span>
+            )}
+            {halal && hTier === "deterministic" && (
               <span className="badge orange">
                 <MoonStar size={11} /> Halal
               </span>
@@ -154,10 +199,18 @@ export default function BusinessCard({ business, compact = false }) {
                 <Accessibility size={11} /> Access
               </span>
             )}
+            {openNow === true && (
+              <span className="badge green">
+                <Clock size={11} /> Open now
+              </span>
+            )}
           </div>
           {business.rating > 0 && (
             <span className="badge yellow">
               <Star size={11} style={{ fill: "currentColor" }} /> {business.rating}
+              {business.user_rating_count > 0 && (
+                <span style={{ marginLeft: 4, opacity: 0.8 }}>({business.user_rating_count.toLocaleString()})</span>
+              )}
             </span>
           )}
         </div>
@@ -167,6 +220,15 @@ export default function BusinessCard({ business, compact = false }) {
           <strong style={{ fontSize: "1rem", color: "var(--text-primary)", lineHeight: 1.3 }}>
             {business.name}
           </strong>
+          {isLive && (
+            <span
+              className="text-muted"
+              style={{ fontSize: "0.6875rem", border: "1px solid var(--border-subtle)", padding: "1px 6px", borderRadius: 999 }}
+              title="Discovered live via Google Places"
+            >
+              Live · Google
+            </span>
+          )}
         </div>
         <div className="text-secondary" style={{ fontSize: "0.8125rem", textTransform: "capitalize" }}>
           {business.type}
@@ -176,8 +238,39 @@ export default function BusinessCard({ business, compact = false }) {
             <MapPin size={11} /> {business.address}
           </div>
         )}
+        {business.editorial_summary && (
+          <p
+            className="text-secondary"
+            style={{ fontSize: "0.8125rem", margin: "8px 0 0 0", lineHeight: 1.4 }}
+          >
+            {business.editorial_summary}
+          </p>
+        )}
+        {business.top_review && (
+          <div
+            style={{
+              marginTop: 8,
+              padding: "8px 10px",
+              borderLeft: "3px solid var(--brand-blue)",
+              background: "var(--bg-page)",
+              borderRadius: 6,
+              fontSize: "0.75rem",
+              lineHeight: 1.45,
+              color: "var(--text-secondary)",
+              fontStyle: "italic",
+            }}
+          >
+            <Quote size={12} style={{ verticalAlign: "-2px", marginRight: 4, color: "var(--brand-blue)" }} />
+            {business.top_review}
+          </div>
+        )}
+        {business.opening_hours?.weekday_descriptions?.[0] && (
+          <div className="text-muted" style={{ fontSize: "0.6875rem", marginTop: 6 }}>
+            <Clock size={10} style={{ verticalAlign: "-1px" }} /> {business.opening_hours.weekday_descriptions[0]}
+          </div>
+        )}
         {business.avg_spend_myr > 0 && (
-          <div style={{ marginTop: 4, fontSize: "0.875rem" }}>
+          <div style={{ marginTop: 6, fontSize: "0.875rem" }}>
             From <span style={{ color: "var(--brand-orange)", fontWeight: 700 }}>RM{business.avg_spend_myr}</span>
             <span className="text-muted" style={{ fontSize: "0.75rem" }}> /person</span>
           </div>

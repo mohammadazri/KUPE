@@ -79,11 +79,16 @@ class Business(BaseModel):
     photos: list[str] = Field(default_factory=list)
     address: Optional[str] = None
     rating: float = 0.0
+    user_rating_count: int = 0
     avg_spend_myr: float = 0.0
     linkage_score: float = 0.0
     success_rate: float = 0.0
     active: bool = True
     place_id: Optional[str] = None  # Google Places ID if available
+    source: str = "seed"  # "seed" | "google_places"
+    opening_hours: Optional[dict] = None  # currentOpeningHours payload from Places
+    editorial_summary: Optional[str] = None
+    top_review: Optional[str] = None
 
 
 # ---------- Linkage ----------
@@ -163,6 +168,7 @@ class Trip(BaseModel):
     id: str = Field(default_factory=lambda: _uid("trip"))
     traveler_id: str
     city: str
+    location: Optional[Location] = None  # Geocoded city center for self-heal re-discovery
     dates: TripDates
     constraint_profile: list[ConstraintKey] = Field(default_factory=list)
     preferences: list[str] = Field(default_factory=list)
@@ -178,6 +184,8 @@ class Trip(BaseModel):
 
 class GenerateTripRequest(BaseModel):
     city: str = "Kuala Lumpur"
+    lat: Optional[float] = None  # If frontend resolved via Places autocomplete, skip server geocoding
+    lng: Optional[float] = None
     start_date: str
     end_date: str
     constraints: list[ConstraintKey] = Field(default_factory=list)
