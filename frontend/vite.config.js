@@ -45,6 +45,17 @@ export default defineConfig({
       devOptions: { enabled: false }
     })
   ],
-  server: { port: 5173, host: true },
+  server: {
+    port: 5173,
+    host: true,
+    // Allow Cloudflare TryCloudflare tunnel hosts to load the dev server.
+    // Vite 5+ blocks unknown hosts by default — this trusts any *.trycloudflare.com.
+    allowedHosts: [".trycloudflare.com", "localhost"],
+    hmr: {
+      // When loaded via HTTPS tunnel, HMR WebSocket must use 443 + wss
+      clientPort: 443,
+      protocol: "wss",
+    },
+  },
   preview: { port: 4173 }
 });
