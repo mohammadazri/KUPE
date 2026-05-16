@@ -28,6 +28,58 @@ function SlotRow({ slot, linkage, business, onClick, translationTarget }) {
       ? "timeline-node broken"
       : "timeline-node";
 
+  if (!business) {
+    return (
+      <div
+        style={{
+          position: "relative",
+          paddingBottom: 8,
+          paddingLeft: 2,
+          minHeight: 32,
+        }}
+      >
+        <div className={nodeClass} style={{ top: 8, width: 12, height: 12, borderWidth: 2 }} />
+        <div
+          className="row"
+          style={{
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "4px 0",
+            opacity: 0.75,
+          }}
+        >
+          <div className="row-tight" style={{ gap: 10 }}>
+            <span
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "0.8125rem",
+                color: "var(--text-muted, var(--text-secondary))",
+                fontWeight: 600,
+                minWidth: 42,
+              }}
+            >
+              {slot.time}
+            </span>
+            <span
+              className="text-muted"
+              style={{ fontSize: "0.8125rem" }}
+            >
+              {labelText} · No business assigned
+            </span>
+          </div>
+          {statusChip && (
+            <span
+              className={`chip ${statusChip}`}
+              style={{ padding: "1px 8px", fontSize: "0.6875rem" }}
+            >
+              {slot.status}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       whileHover={{ x: 2 }}
@@ -58,13 +110,7 @@ function SlotRow({ slot, linkage, business, onClick, translationTarget }) {
           </div>
         </div>
         <div className="mt-3">
-          {business ? (
-            <BusinessCard business={business} compact />
-          ) : (
-            <div className="text-muted" style={{ fontSize: "0.875rem" }}>
-              No business assigned
-            </div>
-          )}
+          <BusinessCard business={business} compact />
         </div>
         {linkage && (
           <div className="mt-3" style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 10 }}>

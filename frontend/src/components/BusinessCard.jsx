@@ -1,11 +1,50 @@
+import { useEffect, useState } from "react";
 import { Star, MoonStar, Accessibility, MapPin } from "lucide-react";
 import { getPhotoForBusiness } from "../utils/photos.js";
+import { getPlacePhotoUrl } from "../utils/placesPhoto.js";
+
+const MAPS_KEY = import.meta.env.VITE_MAPS_BROWSER_KEY;
+
+function streetViewUrl(business, size = "800x450") {
+  if (!MAPS_KEY || !business?.location?.lat || !business?.location?.lng) return null;
+  const { lat, lng } = business.location;
+  return `https://maps.googleapis.com/maps/api/streetview?size=${size}&location=${lat},${lng}&fov=80&key=${MAPS_KEY}`;
+}
 
 export default function BusinessCard({ business, compact = false }) {
+  const fallback = getPhotoForBusiness(business);
+  const [photo, setPhoto] = useState(fallback);
+  const [errored, setErrored] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPhoto(fallback);
+    setErrored(false);
+    if (!business) return;
+    getPlacePhotoUrl(business).then((url) => {
+      if (!cancelled && url) {
+        setPhoto(url);
+        setErrored(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [business, fallback]);
+
+  const handleImgError = () => {
+    const sv = streetViewUrl(business, compact ? "128x128" : "800x450");
+    if (sv && photo !== sv) {
+      setPhoto(sv);
+    } else {
+      setErrored(true);
+    }
+  };
+
   if (!business) return null;
   const halal = business.constraints_met?.halal?.certified;
   const wheelchair = business.constraints_met?.accessibility?.wheelchair;
-  const photo = getPhotoForBusiness(business);
+
+  const placeholderBg = "linear-gradient(135deg, var(--brand-blue-soft) 0%, #E8EEF5 100%)";
+  const initial = (business.name || "?").trim().charAt(0).toUpperCase();
 
   if (compact) {
     return (
@@ -19,14 +58,32 @@ export default function BusinessCard({ business, compact = false }) {
             flexShrink: 0,
             position: "relative",
             border: "1px solid var(--border-subtle)",
+            background: placeholderBg,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          <img
-            src={photo}
-            alt=""
-            loading="lazy"
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          />
+          {errored ? (
+            <span
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "1.5rem",
+                color: "var(--brand-blue)",
+                fontWeight: 700,
+              }}
+            >
+              {initial}
+            </span>
+          ) : (
+            <img
+              src={photo}
+              alt=""
+              loading="lazy"
+              onError={handleImgError}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+          )}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="row-tight" style={{ flexWrap: "wrap" }}>
@@ -60,12 +117,31 @@ export default function BusinessCard({ business, compact = false }) {
 
   return (
     <div className="photo-card">
-      <div className="photo">
-        <img
-          src={photo}
-          alt={business.name}
-          loading="lazy"
-        />
+      <div className="photo" style={{ background: placeholderBg }}>
+        {errored ? (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: "var(--font-display)",
+              fontSize: "3rem",
+              color: "var(--brand-blue)",
+              fontWeight: 700,
+            }}
+          >
+            {initial}
+          </div>
+        ) : (
+          <img
+            src={photo}
+            alt={business.name}
+            loading="lazy"
+            onError={handleImgError}
+          />
+        )}
         <div className="photo-overlay-top">
           <div className="row-tight" style={{ gap: 6 }}>
             {halal && (
