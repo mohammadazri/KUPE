@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Sparkles, ArrowRightLeft, Loader } from "lucide-react";
+import { Flame, Sparkles, ArrowRightLeft, Loader2 } from "lucide-react";
 import { useTrip } from "../hooks/useTrip.jsx";
 import BusinessCard from "./BusinessCard.jsx";
 
@@ -48,16 +48,16 @@ export default function SelfHealDemo({ trip, linkages, businesses }) {
   const oldBiz = slotData ? businesses[slotData.business_id] : null;
 
   return (
-    <div className="card glow">
+    <div className="card" style={{ borderTop: "3px solid var(--brand-orange)" }}>
       <div className="row" style={{ justifyContent: "space-between" }}>
-        <div className="row">
-          <Flame size={18} color="#FF6B35" />
+        <div className="row-tight">
+          <Flame size={16} color="var(--brand-orange)" />
           <strong>Self-Heal Demo</strong>
         </div>
-        <span className="chip warn">The wow moment</span>
+        <span className="chip orange">The wow moment</span>
       </div>
-      <p className="text-secondary mt-2" style={{ fontSize: "0.9rem" }}>
-        Pick any slot. We'll simulate the business closing and watch KUPE re-link with a verified replacement in real time.
+      <p className="text-secondary mt-2" style={{ fontSize: "0.875rem" }}>
+        Pick any slot. We'll simulate the venue closing and watch KUPE re-link with a verified replacement in real time.
       </p>
 
       <div className="mt-3">
@@ -83,7 +83,7 @@ export default function SelfHealDemo({ trip, linkages, businesses }) {
       <AnimatePresence>
         {picked && stage === "idle" && (
           <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
-            <div className="card" style={{ background: "rgba(255,255,255,0.02)" }}>
+            <div className="card flat" style={{ background: "var(--bg-page)", boxShadow: "none" }}>
               <BusinessCard business={oldBiz} compact />
             </div>
             <button className="btn danger mt-3 w-100" onClick={trigger}>
@@ -97,11 +97,11 @@ export default function SelfHealDemo({ trip, linkages, businesses }) {
             key="break"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="card mt-4 break-out"
+            className="card tinted-danger mt-4"
           >
-            <div className="row">
+            <div className="row-tight">
               <span className="chip danger">💔 Broken</span>
-              <span>{oldBiz?.name} closed</span>
+              <span style={{ fontSize: "0.875rem" }}>{oldBiz?.name} just closed</span>
             </div>
           </motion.div>
         )}
@@ -111,16 +111,18 @@ export default function SelfHealDemo({ trip, linkages, businesses }) {
             key="searching"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="card mt-4"
+            className="card tinted-orange mt-4"
           >
-            <div className="row">
-              <Loader className="pulse" size={18} color="#B8E6F5" />
-              <span>Re-running linkage engine…</span>
+            <div className="row-tight">
+              <Loader2 className="pulse-orange" size={16} color="var(--brand-orange)" />
+              <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>
+                Re-running linkage engine…
+              </span>
             </div>
-            <div className="stack mt-3">
-              <div className="skeleton" style={{ height: 14, width: "85%" }} />
-              <div className="skeleton" style={{ height: 14, width: "60%" }} />
-              <div className="skeleton" style={{ height: 14, width: "75%" }} />
+            <div className="stack mt-3" style={{ gap: 8 }}>
+              <div className="skeleton" style={{ height: 12, width: "85%" }} />
+              <div className="skeleton" style={{ height: 12, width: "60%" }} />
+              <div className="skeleton" style={{ height: 12, width: "75%" }} />
             </div>
           </motion.div>
         )}
@@ -131,12 +133,11 @@ export default function SelfHealDemo({ trip, linkages, businesses }) {
             initial={{ opacity: 0, y: 8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", damping: 18 }}
-            className="card mt-4 heal-in"
-            style={{ borderColor: "rgba(50,213,131,0.5)" }}
+            className="card tinted-success heal-in mt-4"
           >
             <div className="row" style={{ justifyContent: "space-between" }}>
               <span className="chip success"><Sparkles size={12} /> HEALED</span>
-              <ArrowRightLeft size={14} color="#B8E6F5" />
+              <ArrowRightLeft size={14} color="var(--success)" />
             </div>
             <div className="mt-3">
               <BusinessCard business={result.new_business} compact />
@@ -144,11 +145,12 @@ export default function SelfHealDemo({ trip, linkages, businesses }) {
             <div
               className="mt-3"
               style={{
-                background: "rgba(50,213,131,0.08)",
-                borderLeft: "3px solid #32D583",
+                background: "var(--bg-surface)",
+                borderLeft: "3px solid var(--success)",
                 padding: "10px 14px",
-                borderRadius: 8,
-                fontSize: "0.9rem",
+                borderRadius: "var(--radius-md)",
+                fontSize: "0.875rem",
+                lineHeight: 1.5,
               }}
             >
               {result.reasoning}

@@ -66,6 +66,9 @@ backend/.places_cache/
 
 # --- Deleted dev artifact ---
 development_plan.pdf
+
+# --- Visual smoke-test screenshots at repo root (Playwright captures) ---
+kupe-*.png
 /.playwright-mcp
 
 

@@ -8,7 +8,7 @@ import { useTrip } from "../hooks/useTrip.jsx";
 export default function PlannerPage() {
   const { generate, loading, error } = useTrip();
   const nav = useNavigate();
-  const [stage, setStage] = useState("form");  // form | loading | done
+  const [stage, setStage] = useState("form"); // form | loading | done
 
   const handleGenerate = async (payload) => {
     setStage("loading");
@@ -22,7 +22,7 @@ export default function PlannerPage() {
   };
 
   return (
-    <div className="container">
+    <div className="container" style={{ paddingTop: 32 }}>
       {stage === "form" && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -36,9 +36,9 @@ export default function PlannerPage() {
             </p>
           </header>
           {error && (
-            <div className="card mb-4" style={{ borderColor: "rgba(239,68,68,0.4)" }}>
+            <div className="card tinted-danger mb-4">
               <strong className="text-danger">⚠ Couldn't generate trip</strong>
-              <div className="text-muted mt-2" style={{ fontSize: "0.9rem" }}>
+              <div className="text-secondary mt-2" style={{ fontSize: "0.875rem" }}>
                 {error}
               </div>
             </div>
@@ -47,9 +47,7 @@ export default function PlannerPage() {
         </motion.div>
       )}
 
-      {stage === "loading" && (
-        <SkeletonLoader />
-      )}
+      {stage === "loading" && <SkeletonLoader />}
     </div>
   );
 }

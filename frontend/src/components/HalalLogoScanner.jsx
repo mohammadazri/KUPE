@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Camera, Loader, CheckCircle2, XCircle } from "lucide-react";
+import { Camera, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { VisionAPI } from "../api/client.js";
 
 export default function HalalLogoScanner() {
@@ -36,42 +36,47 @@ export default function HalalLogoScanner() {
   return (
     <div className="card">
       <div className="row" style={{ justifyContent: "space-between" }}>
-        <div className="row">
-          <Camera size={18} color="#B8E6F5" />
+        <div className="row-tight">
+          <Camera size={16} color="var(--brand-blue)" />
           <strong>Halal logo scanner</strong>
         </div>
-        <span className="chip">Cloud Vision · logo detection</span>
+        <span className="chip">Cloud Vision</span>
       </div>
-      <p className="text-secondary mt-2" style={{ fontSize: "0.85rem" }}>
+      <p className="text-secondary mt-2" style={{ fontSize: "0.875rem" }}>
         Snap a storefront sign or menu. KUPE detects JAKIM / Halal certification logos.
       </p>
       <input ref={inputRef} type="file" accept="image/*" capture="environment" onChange={onChange} hidden />
-      <button className="btn ghost w-100 mt-3" onClick={() => inputRef.current?.click()} disabled={busy}>
-        {busy ? <Loader size={16} className="pulse" /> : <Camera size={16} />}{" "}
+      <button className="btn outline w-100 mt-3" onClick={() => inputRef.current?.click()} disabled={busy}>
+        {busy ? <Loader2 size={16} className="pulse-orange" /> : <Camera size={16} />}{" "}
         {busy ? "Analysing…" : "Upload / take photo"}
       </button>
 
-      {error && <div className="text-danger mt-3" style={{ fontSize: "0.85rem" }}>⚠ {error}</div>}
+      {error && (
+        <div className="text-danger mt-3" style={{ fontSize: "0.8125rem" }}>
+          ⚠ {error}
+        </div>
+      )}
 
       {result && (
         <div
-          className="card mt-3"
-          style={{
-            background: result.halal_detected ? "rgba(50,213,131,0.10)" : "rgba(245,166,35,0.10)",
-            borderColor: result.halal_detected ? "rgba(50,213,131,0.4)" : "rgba(245,166,35,0.4)",
-          }}
+          className={`card ${result.halal_detected ? "tinted-success" : "tinted-orange"} mt-3 flat`}
+          style={{ boxShadow: "none" }}
         >
-          <div className="row">
-            {result.halal_detected ? <CheckCircle2 size={18} color="#32D583" /> : <XCircle size={18} color="#F5A623" />}
-            <strong>
+          <div className="row-tight">
+            {result.halal_detected ? (
+              <CheckCircle2 size={18} color="var(--success)" />
+            ) : (
+              <XCircle size={18} color="var(--brand-orange)" />
+            )}
+            <strong style={{ fontSize: "0.9375rem" }}>
               {result.halal_detected ? "Halal certification detected" : "No halal logo detected"}
             </strong>
           </div>
-          <div className="text-muted mt-2" style={{ fontSize: "0.82rem" }}>
+          <div className="text-muted mt-2" style={{ fontSize: "0.8125rem" }}>
             Confidence: {(result.confidence * 100).toFixed(1)}%
           </div>
           {result.matched_logos?.length > 0 && (
-            <ul className="mt-2" style={{ fontSize: "0.82rem", paddingLeft: 18 }}>
+            <ul className="mt-2" style={{ fontSize: "0.8125rem", paddingLeft: 18, color: "var(--text-primary)" }}>
               {result.matched_logos.map((m, i) => <li key={i}>{m}</li>)}
             </ul>
           )}
